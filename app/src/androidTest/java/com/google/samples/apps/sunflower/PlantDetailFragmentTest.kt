@@ -31,6 +31,11 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
+import androidx.ui.test.android.AndroidComposeTestRule
+import androidx.ui.test.assertIsDisplayed
+import androidx.ui.test.createComposeRule
+import androidx.ui.test.findByText
+import androidx.ui.test.runOnIdleCompose
 import com.google.samples.apps.sunflower.utilities.chooser
 import com.google.samples.apps.sunflower.utilities.testPlant
 import org.hamcrest.CoreMatchers.allOf
@@ -43,13 +48,12 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class PlantDetailFragmentTest {
 
-    @Rule
-    @JvmField
-    val activityTestRule = ActivityTestRule(GardenActivity::class.java)
+    @get:Rule
+    val composeTestRule = AndroidComposeTestRule<GardenActivity>()
 
     @Before
     fun jumpToPlantDetailFragment() {
-        activityTestRule.activity.apply {
+        composeTestRule.activityTestRule.activity.apply {
             runOnUiThread {
                 val bundle = Bundle().apply { putString("plantId", testPlant.plantId) }
                 findNavController(R.id.nav_host).navigate(R.id.plant_detail_fragment, bundle)
@@ -60,7 +64,7 @@ class PlantDetailFragmentTest {
     @Ignore("Share button redesign pending")
     @Test
     fun testShareTextIntent() {
-        val shareText = activityTestRule.activity.getString(
+        val shareText = composeTestRule.activityTestRule.activity.getString(
             R.string.share_text_plant,
             testPlant.name
         )
@@ -82,5 +86,12 @@ class PlantDetailFragmentTest {
         InstrumentationRegistry.getInstrumentation()
             .uiAutomation
             .performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+    }
+
+    @Test
+    fun app_launches() {
+        runOnIdleCompose {
+            findByText(testPlant.name).assertIsDisplayed()
+        }
     }
 }

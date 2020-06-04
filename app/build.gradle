@@ -101,5 +101,6 @@ dependencies {
     androidTestImplementation "androidx.test.uiautomator:uiautomator:$rootProject.uiAutomatorVersion"
     androidTestImplementation "androidx.work:work-testing:$rootProject.workVersion"
     androidTestImplementation "com.google.truth:truth:$rootProject.truthVersion"
+    androidTestImplementation "androidx.ui:ui-test:0.1.0-SNAPSHOT"
     testImplementation "junit:junit:$rootProject.junitVersion"
 }
