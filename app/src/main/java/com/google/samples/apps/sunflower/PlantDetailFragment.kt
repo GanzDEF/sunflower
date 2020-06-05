@@ -25,22 +25,16 @@ import android.widget.FrameLayout
 import androidx.compose.Recomposer
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ShareCompat
-import androidx.core.widget.NestedScrollView
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.ui.core.setContent
-import androidx.ui.foundation.Text
-import androidx.ui.material.MaterialTheme
 import androidx.ui.material.Surface
-import com.google.android.material.color.MaterialColors
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.samples.apps.sunflower.compose.PlantDetails
 import com.google.samples.apps.sunflower.data.Plant
-import com.google.samples.apps.sunflower.databinding.FragmentPlantDetailBinding
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
@@ -61,63 +55,66 @@ class PlantDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val binding = DataBindingUtil.inflate<FragmentPlantDetailBinding>(
-            inflater, R.layout.fragment_plant_detail, container, false
-        ).apply {
-            viewModel = plantDetailViewModel
-            lifecycleOwner = viewLifecycleOwner
-            callback = object : Callback {
-                override fun add(plant: Plant?) {
-                    plant?.let {
-                        hideAppBarFab(fab)
-                        plantDetailViewModel.addPlantToGarden()
-                        Snackbar.make(root, R.string.added_plant_to_garden, Snackbar.LENGTH_LONG)
-                            .show()
-                    }
-                }
-            }
+
+        val view = inflater.inflate(R.layout.fragment_plant_detail, container, false)
+
+//        val binding = DataBindingUtil.inflate<FragmentPlantDetailBinding>(
+//            inflater, R.layout.fragment_plant_detail, container, false
+//        ).apply {
+//            viewModel = plantDetailViewModel
+//            lifecycleOwner = viewLifecycleOwner
+//            callback = object : Callback {
+//                override fun add(plant: Plant?) {
+//                    plant?.let {
+////                        hideAppBarFab(fab)
+//                        plantDetailViewModel.addPlantToGarden()
+//                        Snackbar.make(root, R.string.added_plant_to_garden, Snackbar.LENGTH_LONG)
+//                            .show()
+//                    }
+//                }
+//            }
 
             var isToolbarShown = false
 
             // scroll change listener begins at Y = 0 when image is fully collapsed
-            plantDetailScrollview.setOnScrollChangeListener(
-                NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, _ ->
+//            plantDetailScrollview.setOnScrollChangeListener(
+//                NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, _ ->
+//
+//                    // User scrolled past image to height of toolbar and the title text is
+//                    // underneath the toolbar, so the toolbar should be shown.
+//                    val shouldShowToolbar = scrollY > toolbar.height
+//
+//                    // The new state of the toolbar differs from the previous state; update
+//                    // appbar and toolbar attributes.
+//                    if (isToolbarShown != shouldShowToolbar) {
+//                        isToolbarShown = shouldShowToolbar
+//
+//                        // Use shadow animator to add elevation if toolbar is shown
+//                        appbar.isActivated = shouldShowToolbar
+//
+//                        // Show the plant name if toolbar is shown
+//                        toolbarLayout.isTitleEnabled = shouldShowToolbar
+//                    }
+//                }
+//            )
+//
+//            toolbar.setNavigationOnClickListener { view ->
+//                view.findNavController().navigateUp()
+//            }
+//
+//            toolbar.setOnMenuItemClickListener { item ->
+//                when (item.itemId) {
+//                    R.id.action_share -> {
+//                        createShareIntent()
+//                        true
+//                    }
+//                    else -> false
+//                }
+//            }
+//        }
+//        setHasOptionsMenu(true)
 
-                    // User scrolled past image to height of toolbar and the title text is
-                    // underneath the toolbar, so the toolbar should be shown.
-                    val shouldShowToolbar = scrollY > toolbar.height
-
-                    // The new state of the toolbar differs from the previous state; update
-                    // appbar and toolbar attributes.
-                    if (isToolbarShown != shouldShowToolbar) {
-                        isToolbarShown = shouldShowToolbar
-
-                        // Use shadow animator to add elevation if toolbar is shown
-                        appbar.isActivated = shouldShowToolbar
-
-                        // Show the plant name if toolbar is shown
-                        toolbarLayout.isTitleEnabled = shouldShowToolbar
-                    }
-                }
-            )
-
-            toolbar.setNavigationOnClickListener { view ->
-                view.findNavController().navigateUp()
-            }
-
-            toolbar.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.action_share -> {
-                        createShareIntent()
-                        true
-                    }
-                    else -> false
-                }
-            }
-        }
-        setHasOptionsMenu(true)
-
-        val composeFrame = binding.root.findViewById<FrameLayout>(R.id.compose_frame)
+        val composeFrame = view?.findViewById<FrameLayout>(R.id.compose_frame)!!
         composeFrame.setContent(Recomposer.current()) {
             MaterialThemeFromMdcTheme(context = requireContext()) {
                 Surface {
@@ -126,7 +123,10 @@ class PlantDetailFragment : Fragment() {
             }
         }
 
-        return binding.root
+        view.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+
+        return view
     }
 
     // Helper function for calling a share functionality.

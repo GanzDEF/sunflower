@@ -91,6 +91,7 @@ dependencies {
     implementation "androidx.ui:ui-livedata:$composeVersion"
     implementation "androidx.ui:ui-android-view:0.1.0-SNAPSHOT"
     implementation "dev.chrisbanes.accompanist:accompanist-mdc-theme:$accompanistVersion"
+    implementation "dev.chrisbanes.accompanist:accompanist-coil:$accompanistVersion"
 
     // Testing dependencies
     androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
