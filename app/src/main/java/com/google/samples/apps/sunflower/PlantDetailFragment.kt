@@ -26,6 +26,7 @@ import androidx.compose.Recomposer
 import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.ui.core.setContent
 import androidx.ui.material.Surface
@@ -54,23 +55,6 @@ class PlantDetailFragment : Fragment() {
 
         val view = inflater.inflate(R.layout.fragment_plant_detail, container, false)
 
-//
-//            toolbar.setNavigationOnClickListener { view ->
-//                view.findNavController().navigateUp()
-//            }
-//
-//            toolbar.setOnMenuItemClickListener { item ->
-//                when (item.itemId) {
-//                    R.id.action_share -> {
-//                        createShareIntent()
-//                        true
-//                    }
-//                    else -> false
-//                }
-//            }
-//        }
-//        setHasOptionsMenu(true)
-
         val composeFrame = view?.findViewById<FrameLayout>(R.id.compose_frame)!!
         composeFrame.setContent(Recomposer.current()) {
             MaterialThemeFromMdcTheme(context = requireContext()) {
@@ -82,6 +66,12 @@ class PlantDetailFragment : Fragment() {
                             plantDetailViewModel.addPlantToGarden()
                             Snackbar.make(getView()!!,
                                 R.string.added_plant_to_garden, Snackbar.LENGTH_LONG).show()
+                        },
+                        onBackClicked = {
+                            view.findNavController().navigateUp()
+                        },
+                        onShareClicked = {
+                            createShareIntent()
                         }
                     )
                 }
