@@ -16,7 +16,6 @@
 
 package com.google.samples.apps.sunflower.compose
 
-import android.util.Log
 import android.widget.TextView
 import androidx.compose.Composable
 import androidx.compose.getValue
@@ -30,9 +29,11 @@ import androidx.ui.core.DensityAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.core.onPositioned
 import androidx.ui.foundation.Box
+import androidx.ui.foundation.Icon
 import androidx.ui.foundation.ScrollerPosition
 import androidx.ui.foundation.Text
 import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.layout.ColumnScope.gravity
 import androidx.ui.layout.Stack
 import androidx.ui.layout.fillMaxSize
@@ -44,6 +45,8 @@ import androidx.ui.livedata.observeAsState
 import androidx.ui.material.FloatingActionButton
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.Surface
+import androidx.ui.material.icons.Icons
+import androidx.ui.material.icons.filled.Add
 import androidx.ui.res.stringResource
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
@@ -58,16 +61,30 @@ import com.google.samples.apps.sunflower.data.Plant
 import dev.chrisbanes.accompanist.coil.CoilImageWithCrossfade
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
+private val SunflowerFabShape =
+    RoundedCornerShape(topLeft = 0.dp, topRight = 30.dp, bottomRight = 0.dp, bottomLeft = 30.dp)
+
 @Composable
-fun PlantDetails(plants: LiveData<Plant>) {
-    val plant by plants.observeAsState()
-    if (plant != null) {
-        PlantOverview(plant!!)
+fun PlantDetails(
+    plantObservable: LiveData<Plant>,
+    isPlantedObservable: LiveData<Boolean>,
+    onFabClicked: () -> Unit
+) {
+    val plant by plantObservable.observeAsState()
+    val isPlanted by isPlantedObservable.observeAsState()
+
+    if (plant != null && isPlanted != null) {
+        PlantOverview(plant!!, isPlanted!!, onFabClicked)
     }
 }
 
 @Composable
-private fun PlantOverview(plant: Plant, modifier: Modifier = Modifier) {
+private fun PlantOverview(
+    plant: Plant,
+    isPlanted: Boolean,
+    onFabClicked: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val scrollerPosition = ScrollerPosition()
     val imageHeight = state { Px.Zero }
 
@@ -75,19 +92,24 @@ private fun PlantOverview(plant: Plant, modifier: Modifier = Modifier) {
         scrollerPosition = scrollerPosition,
         modifier = Modifier.fillMaxSize().plus(modifier)
     ) {
-        Log.e("TEST", "Scroller position ${scrollerPosition.value}")
         Stack(Modifier.fillMaxWidth()) {
             PlantImage(scrollerPosition, plant.imageUrl, Modifier.onPositioned {
                 imageHeight.value = it.size.height.toPx()
             })
-            val fabModifier = if (imageHeight.value != Px.Zero) {
-                Modifier.gravity(Alignment.TopEnd).padding(end = 8.dp)
-                    .offset(y = getFabOffset(imageHeight.value, scrollerPosition))
-            } else {
-                Modifier
-            }
-            FloatingActionButton(onClick = {}, modifier = fabModifier) {
-
+            if (!isPlanted) {
+                val fabModifier = if (imageHeight.value != Px.Zero) {
+                    Modifier.gravity(Alignment.TopEnd).padding(end = 8.dp)
+                        .offset(y = getFabOffset(imageHeight.value, scrollerPosition))
+                } else {
+                    Modifier
+                }
+                FloatingActionButton(
+                    onClick = onFabClicked, // This doesn't work due to b/155868092
+                    shape = SunflowerFabShape,
+                    modifier = fabModifier
+                ) {
+                    Icon(Icons.Filled.Add)
+                }
             }
         }
         PlantInformation(
@@ -182,7 +204,9 @@ private fun PlantOverviewPreview() {
     MaterialThemeFromMdcTheme(ContextAmbient.current) {
         Surface {
             PlantOverview(
-                Plant("plantId", "Tomato", "HTML<br>description", 6)
+                Plant("plantId", "Tomato", "HTML<br>description", 6),
+                true,
+                { }
             )
         }
     }
