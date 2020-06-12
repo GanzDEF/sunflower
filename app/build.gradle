@@ -22,9 +22,6 @@ apply plugin: 'androidx.navigation.safeargs.kotlin'
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
-    dataBinding {
-        enabled = true
-    }
     defaultConfig {
         applicationId "com.google.samples.apps.sunflower"
         minSdkVersion rootProject.minSdkVersion
@@ -50,6 +47,7 @@ android {
     }
     buildFeatures {
         compose true
+        dataBinding true
     }
     composeOptions {
         kotlinCompilerVersion composeKotlinCompilerVersion

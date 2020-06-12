@@ -21,6 +21,6 @@
     style="?android:attr/textAppearanceMedium"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:minHeight="@dimen/plant_description_min_height"
+    android:paddingBottom="@dimen/padding_large"
     tools:text="Details about the plant" />
 <!-- android:textIsSelectable="true" Commented out due to nested scrolling problems-->
