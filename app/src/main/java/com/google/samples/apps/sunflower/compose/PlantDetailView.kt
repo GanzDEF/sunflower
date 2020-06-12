@@ -87,19 +87,27 @@ private const val HeaderTransitionOffset = 150f
 private val SunflowerFabShape =
     RoundedCornerShape(topLeft = 0.dp, topRight = 30.dp, bottomRight = 0.dp, bottomLeft = 30.dp)
 
+/**
+ * As these callbacks are passed in through multiple Composables, to avoid having to name
+ * parameters in order to not mix them up, they're aggregated in this class.
+ */
+data class PlantDetailsCallbacks(
+    val onFabClicked: () -> Unit,
+    val onBackClicked: () -> Unit,
+    val onShareClicked: () -> Unit
+)
+
 @Composable
 fun PlantDetails(
     plantObservable: LiveData<Plant>,
     isPlantedObservable: LiveData<Boolean>,
-    onFabClicked: () -> Unit,
-    onBackClicked: () -> Unit,
-    onShareClicked: () -> Unit
+    callbacks: PlantDetailsCallbacks
 ) {
     val plant by plantObservable.observeAsState()
     val isPlanted by isPlantedObservable.observeAsState()
 
     if (plant != null && isPlanted != null) {
-        PlantOverview(plant!!, isPlanted!!, onFabClicked, onBackClicked, onShareClicked)
+        PlantOverview(plant!!, isPlanted!!, callbacks)
     }
 }
 
@@ -107,45 +115,80 @@ fun PlantDetails(
 private fun PlantOverview(
     plant: Plant,
     isPlanted: Boolean,
-    onFabClicked: () -> Unit,
-    onBackClicked: () -> Unit,
-    onShareClicked: () -> Unit,
+    callbacks: PlantDetailsCallbacks,
     modifier: Modifier = Modifier
 ) {
     val scrollerPosition = ScrollerPosition()
-    var toolbarShown by state { false }
 
     Stack(modifier) {
-        VerticalScroller(scrollerPosition) {
-            var namePosition by state { Px.Infinity }
-            onCommit(namePosition.value, scrollerPosition.value) {
-                toolbarShown =
-                    scrollerPosition.value > (namePosition.value + HeaderTransitionOffset)
-            }
+        var toolbarShown by state { false }
 
-            Hide(toolbarShown) { hideModifier ->
-                PlantHeader(
-                    scrollerPosition, plant.imageUrl, onFabClicked,
-                    isPlanted, toolbarShown, hideModifier
-                )
-            }
-            PlantInformation(
-                name = plant.name,
-                wateringInterval = plant.wateringInterval,
-                description = plant.description,
-                onNamePositioned = {
-                    if (namePosition == Px.Infinity) {
-                        namePosition = it.globalPosition.y
-                    }
-                },
-                toolbarShown = toolbarShown
+        PlantDetailsContent(
+            scrollerPosition = scrollerPosition,
+            toolbarShown = toolbarShown,
+            onToolbarShownUpdate = { newValue -> toolbarShown = newValue },
+            plant = plant,
+            isPlanted = isPlanted,
+            callbacks = callbacks
+        )
+        PlantToolbar(toolbarShown, plant.name, callbacks)
+    }
+}
+
+@Composable
+private fun PlantDetailsContent(
+    scrollerPosition: ScrollerPosition,
+    toolbarShown: Boolean,
+    onToolbarShownUpdate: (Boolean) -> Unit,
+    plant: Plant,
+    isPlanted: Boolean,
+    callbacks: PlantDetailsCallbacks
+) {
+    VerticalScroller(scrollerPosition) {
+        var namePosition by state { Px.Infinity }
+        onCommit(namePosition.value, scrollerPosition.value) {
+            onToolbarShownUpdate(
+                scrollerPosition.value > (namePosition.value + HeaderTransitionOffset)
             )
         }
-        if (toolbarShown) {
-            PlantDetailsToolbar(plant.name, onBackClicked, onShareClicked)
-        } else {
-            HeaderBarContent(onBackClicked, onShareClicked)
+
+        Hide(toolbarShown) { hideModifier ->
+            PlantImageHeader(
+                scrollerPosition, plant.imageUrl, callbacks.onFabClicked,
+                isPlanted, toolbarShown, hideModifier
+            )
         }
+        PlantInformation(
+            name = plant.name,
+            wateringInterval = plant.wateringInterval,
+            description = plant.description,
+            onNamePositioned = {
+                if (namePosition == Px.Infinity) {
+                    namePosition = it.globalPosition.y
+                }
+            },
+            toolbarShown = toolbarShown
+        )
+    }
+}
+
+@Composable
+private fun PlantToolbar(
+    toolbarShown: Boolean,
+    plantName: String,
+    callbacks: PlantDetailsCallbacks
+) {
+    if (toolbarShown) {
+        PlantDetailsToolbar(
+            plantName = plantName,
+            onBackClicked = callbacks.onBackClicked,
+            onShareClicked = callbacks.onShareClicked
+        )
+    } else {
+        HeaderBarContent(
+            onBackClicked = callbacks.onBackClicked,
+            onShareClicked = callbacks.onShareClicked
+        )
     }
 }
 
@@ -181,24 +224,7 @@ private fun PlantDetailsToolbar(
 }
 
 @Composable
-private fun Hide(hide: Boolean, content: @Composable (Modifier) -> Unit) {
-    var contentSize by state { IntPxSize.Zero }
-    if (hide) {
-        val (width, height) = remember(contentSize) {
-            with(DensityAmbient.current) {
-                contentSize.width.toDp() to contentSize.height.toDp()
-            }
-        }
-        Spacer(modifier = Modifier.size(width, height))
-    } else {
-        content(Modifier.onPositioned {
-            contentSize = it.size
-        })
-    }
-}
-
-@Composable
-private fun PlantHeader(
+private fun PlantImageHeader(
     scrollerPosition: ScrollerPosition,
     imageUrl: String,
     onFabClicked: () -> Unit,
@@ -247,10 +273,11 @@ private fun PlantImage(
 
 @Composable
 private fun HeaderBarContent(onBackClicked: () -> Unit, onShareClicked: () -> Unit) {
-    val iconModifier = Modifier.sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
-        .drawBackground(color = Color.White, shape = CircleShape)
-
     Row(Modifier.fillMaxSize().padding(top = StatusBarHeight + 12.dp), Arrangement.SpaceBetween) {
+
+        val iconModifier = Modifier.sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
+            .drawBackground(color = Color.White, shape = CircleShape)
+
         IconButton(
             onClick = onBackClicked,
             modifier = Modifier.padding(start = 12.dp).plus(iconModifier)
@@ -304,6 +331,15 @@ private fun PlantInformation(
 }
 
 @Composable
+private fun PlantDescription(description: String) {
+    // Issue: User input doesn't work properly, HTML links cannot be clicked - b/158088138
+    // HTML support coming to Compose - b/139320905
+    AndroidView(resId = R.layout.item_plant_description) {
+        (it as TextView).text = HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_COMPACT)
+    }
+}
+
+@Composable
 private fun ParallaxEffect(
     scrollerPosition: ScrollerPosition,
     modifier: Modifier = Modifier,
@@ -312,15 +348,6 @@ private fun ParallaxEffect(
     val offset = scrollerPosition.value.px / 2
     val offsetDp = with(DensityAmbient.current) { offset.value.toDp() }
     content(Modifier.padding(top = offsetDp).plus(modifier))
-}
-
-@Composable
-private fun PlantDescription(description: String) {
-    // Issue: User input doesn't work properly, HTML links cannot be clicked - b/158088138
-    // HTML support coming to Compose - b/139320905
-    AndroidView(resId = R.layout.item_plant_description) {
-        (it as TextView).text = HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_COMPACT)
-    }
 }
 
 /**
@@ -336,6 +363,28 @@ private fun getFabOffset(imageHeight: Px, scrollerPosition: ScrollerPosition): D
     }
 }
 
+/**
+ * Hides an element on the screen leaving its space occupied.
+ *
+ * This should be replaced with the visible modifier in the future: b/158837937
+ */
+@Composable
+private fun Hide(hide: Boolean, content: @Composable (Modifier) -> Unit) {
+    var contentSize by state { IntPxSize.Zero }
+    if (hide) {
+        val (width, height) = remember(contentSize) {
+            with(DensityAmbient.current) {
+                contentSize.width.toDp() to contentSize.height.toDp()
+            }
+        }
+        Spacer(modifier = Modifier.size(width, height))
+    } else {
+        content(Modifier.onPositioned {
+            contentSize = it.size
+        })
+    }
+}
+
 @Preview
 @Composable
 private fun PlantOverviewPreview() {
@@ -344,7 +393,7 @@ private fun PlantOverviewPreview() {
             PlantOverview(
                 Plant("plantId", "Tomato", "HTML<br>description", 6),
                 true,
-                { }, { }, { }
+                PlantDetailsCallbacks({ }, { }, { })
             )
         }
     }

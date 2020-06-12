@@ -32,6 +32,7 @@ import androidx.ui.core.setContent
 import androidx.ui.material.Surface
 import com.google.android.material.snackbar.Snackbar
 import com.google.samples.apps.sunflower.compose.PlantDetails
+import com.google.samples.apps.sunflower.compose.PlantDetailsCallbacks
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
@@ -62,17 +63,20 @@ class PlantDetailFragment : Fragment() {
                     PlantDetails(
                         plantDetailViewModel.plant,
                         plantDetailViewModel.isPlanted,
-                        onFabClicked = {
-                            plantDetailViewModel.addPlantToGarden()
-                            Snackbar.make(getView()!!,
-                                R.string.added_plant_to_garden, Snackbar.LENGTH_LONG).show()
-                        },
-                        onBackClicked = {
-                            view.findNavController().navigateUp()
-                        },
-                        onShareClicked = {
-                            createShareIntent()
-                        }
+                        PlantDetailsCallbacks(
+                            onFabClicked = {
+                                plantDetailViewModel.addPlantToGarden()
+                                Snackbar.make(getView()!!,
+                                    R.string.added_plant_to_garden, Snackbar.LENGTH_LONG).show()
+                            },
+                            onBackClicked = {
+                                view.findNavController().navigateUp()
+                            },
+                            onShareClicked = {
+                                createShareIntent()
+                            }
+                        )
+
                     )
                 }
             }
