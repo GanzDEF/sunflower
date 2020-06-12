@@ -30,10 +30,8 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import androidx.ui.test.android.AndroidComposeTestRule
 import androidx.ui.test.assertIsDisplayed
-import androidx.ui.test.createComposeRule
 import androidx.ui.test.findByText
 import androidx.ui.test.runOnIdleCompose
 import com.google.samples.apps.sunflower.utilities.chooser

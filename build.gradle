@@ -55,12 +55,7 @@ buildscript {
     repositories {
         google()
         jcenter()
-        maven {
-            url 'https://maven.fabric.io/public'
-            content {
-                includeGroup "dev.chrisbanes.accompanist"
-            }
-        }
+        mavenCentral()
     }
 
     dependencies {
@@ -71,19 +66,14 @@ buildscript {
 }
 
 plugins {
-    id "com.diffplug.gradle.spotless" version "3.28.1"
+    id "com.diffplug.gradle.spotless" version "4.3.0"
 }
 
 allprojects {
     repositories {
         google()
         jcenter()
-        maven {
-            url 'https://maven.fabric.io/public'
-            content {
-                includeGroup "dev.chrisbanes.accompanist"
-            }
-        }
+        mavenCentral()
         // Needed for ui-android-view - Points at dev13
         maven { url 'https://androidx-dev-prod.appspot.com/snapshots/builds/6543212/artifacts/ui/repository/' }
     }
@@ -96,7 +86,6 @@ spotless {
         targetExclude('bin/**/*.kt')
 
         ktlint(ktlintVersion).userData(
-                ['max_line_length': '100'] +
                 // Don't require parens on fun type annotations e.g. `@Composable~()~ () -> Unit`
                 // TODO: Remove when we move to Kotlin 1.4
                 ["disabled_rules": "paren-spacing"]

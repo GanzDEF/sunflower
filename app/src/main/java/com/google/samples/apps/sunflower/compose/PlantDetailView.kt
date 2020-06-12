@@ -115,18 +115,12 @@ private fun PlantOverview(
     val scrollerPosition = ScrollerPosition()
     var toolbarShown by state { false }
 
-    Stack {
-        VerticalScroller(
-            scrollerPosition = scrollerPosition,
-            modifier = Modifier.fillMaxSize().plus(modifier)
-        ) {
+    Stack(modifier) {
+        VerticalScroller(scrollerPosition) {
             var namePosition by state { Px.Infinity }
             onCommit(namePosition.value, scrollerPosition.value) {
-                if (scrollerPosition.value > (namePosition.value + HeaderTransitionOffset)) {
-                    if (!toolbarShown) toolbarShown = true
-                } else {
-                    if (toolbarShown) toolbarShown = false
-                }
+                toolbarShown =
+                    scrollerPosition.value > (namePosition.value + HeaderTransitionOffset)
             }
 
             Hide(toolbarShown) { hideModifier ->
