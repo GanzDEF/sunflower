@@ -154,8 +154,7 @@ private fun PlantDetailsContent(
 
         Hide(toolbarShown) { hideModifier ->
             PlantImageHeader(
-                scrollerPosition, plant.imageUrl, callbacks.onFabClicked,
-                isPlanted, toolbarShown, hideModifier
+                scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted, hideModifier
             )
         }
         PlantInformation(
@@ -229,7 +228,6 @@ private fun PlantImageHeader(
     imageUrl: String,
     onFabClicked: () -> Unit,
     isPlanted: Boolean,
-    toolbarShown: Boolean,
     modifier: Modifier = Modifier
 ) {
     val imageHeight = state { Px.Zero }
@@ -238,8 +236,8 @@ private fun PlantImageHeader(
         PlantImage(scrollerPosition, imageUrl, Modifier.onPositioned {
             imageHeight.value = it.size.height.toPx()
         })
-        if (!isPlanted && !toolbarShown) {
-            val fabModifier = if (imageHeight.value != Px.Zero && !toolbarShown) {
+        if (!isPlanted) {
+            val fabModifier = if (imageHeight.value != Px.Zero) {
                 Modifier.gravity(Alignment.TopEnd).padding(end = 8.dp)
                     .offset(y = getFabOffset(imageHeight.value, scrollerPosition))
             } else {
