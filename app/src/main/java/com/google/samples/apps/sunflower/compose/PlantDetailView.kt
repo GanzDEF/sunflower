@@ -17,6 +17,9 @@
 package com.google.samples.apps.sunflower.compose
 
 import android.widget.TextView
+import androidx.animation.FloatPropKey
+import androidx.animation.TransitionState
+import androidx.animation.transitionDefinition
 import androidx.compose.Composable
 import androidx.compose.getValue
 import androidx.compose.onCommit
@@ -25,12 +28,14 @@ import androidx.compose.setValue
 import androidx.compose.state
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.LiveData
+import androidx.ui.animation.Transition
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContentScale
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.DensityAmbient
 import androidx.ui.core.LayoutCoordinates
 import androidx.ui.core.Modifier
+import androidx.ui.core.drawOpacity
 import androidx.ui.core.globalPosition
 import androidx.ui.core.onPositioned
 import androidx.ui.foundation.Box
@@ -89,7 +94,7 @@ private val SunflowerFabShape =
 
 /**
  * As these callbacks are passed in through multiple Composables, to avoid having to name
- * parameters in order to not mix them up, they're aggregated in this class.
+ * parameters to not mix them up, they're aggregated in this class.
  */
 data class PlantDetailsCallbacks(
     val onFabClicked: () -> Unit,
@@ -119,19 +124,26 @@ private fun PlantOverview(
     modifier: Modifier = Modifier
 ) {
     val scrollerPosition = ScrollerPosition()
+    var toolbarState by state { ToolbarState.HIDDEN }
 
-    Stack(modifier) {
-        var toolbarShown by state { false }
-
-        PlantDetailsContent(
-            scrollerPosition = scrollerPosition,
-            toolbarShown = toolbarShown,
-            onToolbarShownUpdate = { newValue -> toolbarShown = newValue },
-            plant = plant,
-            isPlanted = isPlanted,
-            callbacks = callbacks
-        )
-        PlantToolbar(toolbarShown, plant.name, callbacks)
+    Transition(
+        definition = toolbarTransitionDefinition,
+        toState = toolbarState
+    ) { transitionState ->
+        Stack(modifier) {
+            PlantDetailsContent(
+                scrollerPosition = scrollerPosition,
+                toolbarShown = toolbarState.toolbarShown,
+                onToolbarShownUpdate = { newValue ->
+                    toolbarState = toolbarStateFromBoolean(newValue)
+                },
+                plant = plant,
+                isPlanted = isPlanted,
+                callbacks = callbacks,
+                transitionState = transitionState
+            )
+            PlantToolbar(toolbarState.toolbarShown, plant.name, callbacks, transitionState)
+        }
     }
 }
 
@@ -142,7 +154,8 @@ private fun PlantDetailsContent(
     onToolbarShownUpdate: (Boolean) -> Unit,
     plant: Plant,
     isPlanted: Boolean,
-    callbacks: PlantDetailsCallbacks
+    callbacks: PlantDetailsCallbacks,
+    transitionState: TransitionState
 ) {
     VerticalScroller(scrollerPosition) {
         var namePosition by state { Px.Infinity }
@@ -154,7 +167,8 @@ private fun PlantDetailsContent(
 
         Hide(toolbarShown) { hideModifier ->
             PlantImageHeader(
-                scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted, hideModifier
+                scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted, hideModifier,
+                Modifier.drawOpacity(transitionState[contentAlphaKey])
             )
         }
         PlantInformation(
@@ -175,18 +189,21 @@ private fun PlantDetailsContent(
 private fun PlantToolbar(
     toolbarShown: Boolean,
     plantName: String,
-    callbacks: PlantDetailsCallbacks
+    callbacks: PlantDetailsCallbacks,
+    transitionState: TransitionState
 ) {
     if (toolbarShown) {
         PlantDetailsToolbar(
             plantName = plantName,
             onBackClicked = callbacks.onBackClicked,
-            onShareClicked = callbacks.onShareClicked
+            onShareClicked = callbacks.onShareClicked,
+            modifier = Modifier.drawOpacity(transitionState[toolbarAlphaKey])
         )
     } else {
         HeaderBarContent(
             onBackClicked = callbacks.onBackClicked,
-            onShareClicked = callbacks.onShareClicked
+            onShareClicked = callbacks.onShareClicked,
+            modifier = Modifier.drawOpacity(transitionState[contentAlphaKey])
         )
     }
 }
@@ -195,9 +212,10 @@ private fun PlantToolbar(
 private fun PlantDetailsToolbar(
     plantName: String,
     onBackClicked: () -> Unit,
-    onShareClicked: () -> Unit
+    onShareClicked: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column {
+    Column(modifier) {
         Spacer( // TODO: This should react to WindowsInsets
             Modifier.preferredHeight(StatusBarHeight).fillMaxWidth()
                 .drawBackground(MaterialTheme.colors.surface)
@@ -228,12 +246,13 @@ private fun PlantImageHeader(
     imageUrl: String,
     onFabClicked: () -> Unit,
     isPlanted: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    imageModifier: Modifier = Modifier
 ) {
     val imageHeight = state { Px.Zero }
 
     Stack(modifier.fillMaxWidth()) {
-        PlantImage(scrollerPosition, imageUrl, Modifier.onPositioned {
+        PlantImage(scrollerPosition, imageUrl, imageModifier.onPositioned {
             imageHeight.value = it.size.height.toPx()
         })
         if (!isPlanted) {
@@ -270,9 +289,12 @@ private fun PlantImage(
 }
 
 @Composable
-private fun HeaderBarContent(onBackClicked: () -> Unit, onShareClicked: () -> Unit) {
-    Row(Modifier.fillMaxSize().padding(top = StatusBarHeight + 12.dp), Arrangement.SpaceBetween) {
-
+private fun HeaderBarContent(
+    onBackClicked: () -> Unit,
+    onShareClicked: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier.fillMaxSize().padding(top = StatusBarHeight + 12.dp), Arrangement.SpaceBetween) {
         val iconModifier = Modifier.sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
             .drawBackground(color = Color.White, shape = CircleShape)
 
@@ -380,6 +402,37 @@ private fun Hide(hide: Boolean, content: @Composable (Modifier) -> Unit) {
         content(Modifier.onPositioned {
             contentSize = it.size
         })
+    }
+}
+
+private enum class ToolbarState { HIDDEN, SHOWN }
+
+private val ToolbarState.toolbarShown: Boolean
+    get() = this == ToolbarState.SHOWN
+
+private fun toolbarStateFromBoolean(show: Boolean): ToolbarState =
+    if (show) ToolbarState.SHOWN
+    else ToolbarState.HIDDEN
+
+private val toolbarAlphaKey = FloatPropKey()
+private val contentAlphaKey = FloatPropKey()
+
+private val toolbarTransitionDefinition = transitionDefinition {
+    state(ToolbarState.HIDDEN) {
+        this[toolbarAlphaKey] = 0f
+        this[contentAlphaKey] = 1f
+    }
+    state(ToolbarState.SHOWN) {
+        this[toolbarAlphaKey] = 1f
+        this[contentAlphaKey] = 0f
+    }
+    transition {
+        toolbarAlphaKey using tween<Float> {
+            duration = 350
+        }
+        contentAlphaKey using tween<Float> {
+            duration = 350
+        }
     }
 }
 
