@@ -76,11 +76,8 @@ import androidx.ui.res.stringResource
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.Dp
-import androidx.ui.unit.IntPxSize
-import androidx.ui.unit.Px
+import androidx.ui.unit.IntSize
 import androidx.ui.unit.dp
-import androidx.ui.unit.px
-import androidx.ui.unit.toPx
 import androidx.ui.viewinterop.AndroidView
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.data.Plant
@@ -89,6 +86,7 @@ import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
 // TODO: Change this for WindowsInsets
 private val StatusBarHeight = 24.dp
+private const val ParallaxDelta = 2f
 private const val HeaderTransitionOffset = 150f
 private val SunflowerFabShape =
     RoundedCornerShape(topLeft = 0.dp, topRight = 30.dp, bottomRight = 0.dp, bottomLeft = 30.dp)
@@ -159,10 +157,10 @@ private fun PlantDetailsContent(
     transitionState: TransitionState
 ) {
     VerticalScroller(scrollerPosition) {
-        var namePosition by state { Px.Infinity }
-        onCommit(namePosition.value, scrollerPosition.value) {
+        var namePosition by state { Float.MAX_VALUE }
+        onCommit(namePosition, scrollerPosition.value) {
             onToolbarShownUpdate(
-                scrollerPosition.value > (namePosition.value + HeaderTransitionOffset)
+                scrollerPosition.value > (namePosition + HeaderTransitionOffset)
             )
         }
 
@@ -177,7 +175,7 @@ private fun PlantDetailsContent(
             wateringInterval = plant.wateringInterval,
             description = plant.description,
             onNamePositioned = {
-                if (namePosition == Px.Infinity) {
+                if (namePosition == Float.MAX_VALUE) {
                     namePosition = it.globalPosition.y
                 }
             },
@@ -250,14 +248,14 @@ private fun PlantImageHeader(
     modifier: Modifier = Modifier,
     transitionModifier: Modifier = Modifier
 ) {
-    val imageHeight = state { Px.Zero }
+    val imageHeight = state { 0 }
 
     Stack(modifier.fillMaxWidth()) {
         PlantImage(scrollerPosition, imageUrl, transitionModifier.onPositioned {
-            imageHeight.value = it.size.height.toPx()
+            imageHeight.value = it.size.height
         })
         if (!isPlanted) {
-            val fabModifier = if (imageHeight.value != Px.Zero) {
+            val fabModifier = if (imageHeight.value != 0) {
                 Modifier.gravity(Alignment.TopEnd).padding(end = 8.dp)
                     .offset(y = getFabOffset(imageHeight.value, scrollerPosition))
                     .plus(transitionModifier)
@@ -265,7 +263,7 @@ private fun PlantImageHeader(
                 Modifier
             }
             FloatingActionButton(
-                onClick = onFabClicked, // This doesn't work due to b/155868092
+                onClick = onFabClicked,
                 shape = SunflowerFabShape,
                 modifier = fabModifier
             ) {
@@ -367,8 +365,8 @@ private fun ParallaxEffect(
     modifier: Modifier = Modifier,
     content: @Composable (Modifier) -> Unit
 ) {
-    val offset = scrollerPosition.value.px / 2
-    val offsetDp = with(DensityAmbient.current) { offset.value.toDp() }
+    val offset = scrollerPosition.value / ParallaxDelta
+    val offsetDp = with(DensityAmbient.current) { offset.toDp() }
     content(Modifier.padding(top = offsetDp).plus(modifier))
 }
 
@@ -379,9 +377,9 @@ private fun ParallaxEffect(
  * delay.
  */
 @Composable
-private fun getFabOffset(imageHeight: Px, scrollerPosition: ScrollerPosition): Dp {
+private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): Dp {
     return with(DensityAmbient.current) {
-        imageHeight.value.toDp() + scrollerPosition.value.toDp() - (56 / 2).dp
+        imageHeight.toDp() + (scrollerPosition.value / ParallaxDelta).toDp() - (56 / 2).dp
     }
 }
 
@@ -392,7 +390,7 @@ private fun getFabOffset(imageHeight: Px, scrollerPosition: ScrollerPosition): D
  */
 @Composable
 private fun Hide(hide: Boolean, content: @Composable (Modifier) -> Unit) {
-    var contentSize by state { IntPxSize.Zero }
+    var contentSize by state { IntSize.Zero }
     if (hide) {
         val (width, height) = remember(contentSize) {
             with(DensityAmbient.current) {
