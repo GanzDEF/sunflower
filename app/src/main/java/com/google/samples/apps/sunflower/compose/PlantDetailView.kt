@@ -35,6 +35,7 @@ import androidx.ui.core.ContextAmbient
 import androidx.ui.core.DensityAmbient
 import androidx.ui.core.LayoutCoordinates
 import androidx.ui.core.Modifier
+import androidx.ui.core.drawLayer
 import androidx.ui.core.drawOpacity
 import androidx.ui.core.globalPosition
 import androidx.ui.core.onPositioned
@@ -168,7 +169,7 @@ private fun PlantDetailsContent(
         Hide(toolbarShown) { hideModifier ->
             PlantImageHeader(
                 scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted, hideModifier,
-                Modifier.drawOpacity(transitionState[contentAlphaKey])
+                Modifier.drawLayer(alpha = transitionState[contentAlphaKey], clip = false)
             )
         }
         PlantInformation(
@@ -247,18 +248,19 @@ private fun PlantImageHeader(
     onFabClicked: () -> Unit,
     isPlanted: Boolean,
     modifier: Modifier = Modifier,
-    imageModifier: Modifier = Modifier
+    transitionModifier: Modifier = Modifier
 ) {
     val imageHeight = state { Px.Zero }
 
     Stack(modifier.fillMaxWidth()) {
-        PlantImage(scrollerPosition, imageUrl, imageModifier.onPositioned {
+        PlantImage(scrollerPosition, imageUrl, transitionModifier.onPositioned {
             imageHeight.value = it.size.height.toPx()
         })
         if (!isPlanted) {
             val fabModifier = if (imageHeight.value != Px.Zero) {
                 Modifier.gravity(Alignment.TopEnd).padding(end = 8.dp)
                     .offset(y = getFabOffset(imageHeight.value, scrollerPosition))
+                    .plus(transitionModifier)
             } else {
                 Modifier
             }
@@ -428,10 +430,10 @@ private val toolbarTransitionDefinition = transitionDefinition {
     }
     transition {
         toolbarAlphaKey using tween<Float> {
-            duration = 350
+            duration = 250
         }
         contentAlphaKey using tween<Float> {
-            duration = 350
+            duration = 250
         }
     }
 }
