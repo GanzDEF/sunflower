@@ -39,6 +39,7 @@ import androidx.ui.core.drawLayer
 import androidx.ui.core.drawOpacity
 import androidx.ui.core.globalPosition
 import androidx.ui.core.onPositioned
+import androidx.ui.core.testTag
 import androidx.ui.foundation.Box
 import androidx.ui.foundation.Icon
 import androidx.ui.foundation.ScrollerPosition
@@ -256,7 +257,9 @@ private fun PlantImageHeader(
         })
         if (!isPlanted) {
             val fabModifier = if (imageHeight.value != 0) {
-                Modifier.gravity(Alignment.TopEnd).padding(end = 8.dp)
+                Modifier
+                    .gravity(Alignment.TopEnd)
+                    .padding(end = 8.dp)
                     .offset(y = getFabOffset(imageHeight.value, scrollerPosition))
                     .plus(transitionModifier)
             } else {
@@ -265,7 +268,7 @@ private fun PlantImageHeader(
             FloatingActionButton(
                 onClick = onFabClicked,
                 shape = SunflowerFabShape,
-                modifier = fabModifier
+                modifier = fabModifier.testTag(SunflowerTestTags.PlantDetails_Fab)
             ) {
                 Icon(Icons.Filled.Add)
             }
