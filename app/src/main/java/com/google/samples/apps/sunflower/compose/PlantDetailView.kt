@@ -20,6 +20,7 @@ import android.widget.TextView
 import androidx.animation.FloatPropKey
 import androidx.animation.TransitionState
 import androidx.animation.transitionDefinition
+import androidx.annotation.VisibleForTesting
 import androidx.compose.Composable
 import androidx.compose.getValue
 import androidx.compose.onCommit
@@ -27,7 +28,6 @@ import androidx.compose.remember
 import androidx.compose.setValue
 import androidx.compose.state
 import androidx.core.text.HtmlCompat
-import androidx.lifecycle.LiveData
 import androidx.ui.animation.Transition
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContentScale
@@ -35,6 +35,7 @@ import androidx.ui.core.ContextAmbient
 import androidx.ui.core.DensityAmbient
 import androidx.ui.core.LayoutCoordinates
 import androidx.ui.core.Modifier
+import androidx.ui.core.ViewAmbient
 import androidx.ui.core.drawLayer
 import androidx.ui.core.drawOpacity
 import androidx.ui.core.globalPosition
@@ -80,8 +81,12 @@ import androidx.ui.unit.Dp
 import androidx.ui.unit.IntSize
 import androidx.ui.unit.dp
 import androidx.ui.viewinterop.AndroidView
+import androidx.ui.viewmodel.viewModel
+import com.google.android.material.snackbar.Snackbar
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.data.Plant
+import com.google.samples.apps.sunflower.utilities.InjectorUtils
+import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
 import dev.chrisbanes.accompanist.coil.CoilImageWithCrossfade
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
@@ -103,21 +108,38 @@ data class PlantDetailsCallbacks(
 )
 
 @Composable
-fun PlantDetails(
-    plantObservable: LiveData<Plant>,
-    isPlantedObservable: LiveData<Boolean>,
-    callbacks: PlantDetailsCallbacks
+fun PlantDetailsScreen(
+    plantId: String,
+    onBackClicked: () -> Unit,
+    onShareClicked: (String) -> Unit
 ) {
-    val plant by plantObservable.observeAsState()
-    val isPlanted by isPlantedObservable.observeAsState()
+    val plantDetailsViewModel: PlantDetailViewModel = viewModel(
+        factory = InjectorUtils.providePlantDetailViewModelFactory(ContextAmbient.current, plantId)
+    )
+    val plant = plantDetailsViewModel.plant.observeAsState().value
+    val isPlanted = plantDetailsViewModel.isPlanted.observeAsState().value
 
     if (plant != null && isPlanted != null) {
-        PlantOverview(plant!!, isPlanted!!, callbacks)
+        val context = ContextAmbient.current
+        val view = ViewAmbient.current
+
+        PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
+            onBackClicked = onBackClicked,
+            onFabClicked = {
+                plantDetailsViewModel.addPlantToGarden()
+                Snackbar.make(view, R.string.added_plant_to_garden, Snackbar.LENGTH_LONG).show()
+            },
+            onShareClicked = {
+                val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
+                onShareClicked(shareText)
+            }
+        ))
     }
 }
 
+@VisibleForTesting
 @Composable
-private fun PlantOverview(
+fun PlantDetails(
     plant: Plant,
     isPlanted: Boolean,
     callbacks: PlantDetailsCallbacks,
@@ -444,7 +466,7 @@ private val toolbarTransitionDefinition = transitionDefinition {
 private fun PlantOverviewPreview() {
     MaterialThemeFromMdcTheme(ContextAmbient.current) {
         Surface {
-            PlantOverview(
+            PlantDetails(
                 Plant("plantId", "Tomato", "HTML<br>description", 6),
                 true,
                 PlantDetailsCallbacks({ }, { }, { })

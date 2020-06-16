@@ -25,16 +25,11 @@ import android.widget.FrameLayout
 import androidx.compose.Recomposer
 import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.ui.core.setContent
 import androidx.ui.material.Surface
-import com.google.android.material.snackbar.Snackbar
-import com.google.samples.apps.sunflower.compose.PlantDetails
-import com.google.samples.apps.sunflower.compose.PlantDetailsCallbacks
-import com.google.samples.apps.sunflower.utilities.InjectorUtils
-import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
+import com.google.samples.apps.sunflower.compose.PlantDetailsScreen
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
 /**
@@ -43,10 +38,6 @@ import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 class PlantDetailFragment : Fragment() {
 
     private val args: PlantDetailFragmentArgs by navArgs()
-
-    private val plantDetailViewModel: PlantDetailViewModel by viewModels {
-        InjectorUtils.providePlantDetailViewModelFactory(requireActivity(), args.plantId)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,23 +51,14 @@ class PlantDetailFragment : Fragment() {
         composeFrame.setContent(Recomposer.current()) {
             MaterialThemeFromMdcTheme(context = requireContext()) {
                 Surface {
-                    PlantDetails(
-                        plantDetailViewModel.plant,
-                        plantDetailViewModel.isPlanted,
-                        PlantDetailsCallbacks(
-                            onFabClicked = {
-                                plantDetailViewModel.addPlantToGarden()
-                                Snackbar.make(getView()!!,
-                                    R.string.added_plant_to_garden, Snackbar.LENGTH_LONG).show()
-                            },
-                            onBackClicked = {
-                                view.findNavController().navigateUp()
-                            },
-                            onShareClicked = {
-                                createShareIntent()
-                            }
-                        )
-
+                    PlantDetailsScreen(
+                        args.plantId,
+                        onBackClicked = {
+                            view.findNavController().navigateUp()
+                        },
+                        onShareClicked = {
+                            createShareIntent(it)
+                        }
                     )
                 }
             }
@@ -91,15 +73,8 @@ class PlantDetailFragment : Fragment() {
     // Helper function for calling a share functionality.
     // Should be used when user presses a share button/menu item.
     @Suppress("DEPRECATION")
-    private fun createShareIntent() {
-        val shareText = plantDetailViewModel.plant.value.let { plant ->
-            if (plant == null) {
-                ""
-            } else {
-                getString(R.string.share_text_plant, plant.name)
-            }
-        }
-        val shareIntent = ShareCompat.IntentBuilder.from(activity!!)
+    private fun createShareIntent(shareText: String) {
+        val shareIntent = ShareCompat.IntentBuilder.from(requireActivity())
             .setText(shareText)
             .setType("text/plain")
             .createChooserIntent()

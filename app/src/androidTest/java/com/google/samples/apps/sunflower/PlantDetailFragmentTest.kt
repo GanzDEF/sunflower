@@ -18,30 +18,19 @@ package com.google.samples.apps.sunflower
 
 import android.content.ContentResolver
 import android.net.Uri
-import android.os.Bundle
 import androidx.annotation.RawRes
 import androidx.compose.Composable
 import androidx.core.net.toUri
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.navigation.Navigation.findNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.ui.core.ContextAmbient
-import androidx.ui.test.android.AndroidComposeTestRule
 import androidx.ui.test.assertIsDisplayed
-import androidx.ui.test.assertIsNotDisplayed
 import androidx.ui.test.createComposeRule
 import androidx.ui.test.findByTag
 import androidx.ui.test.findByText
-import androidx.ui.test.runOnIdleCompose
-import androidx.ui.test.runOnUiThread
-import com.google.common.truth.Truth
-import com.google.samples.apps.sunflower.compose.PlantDetails
 import com.google.samples.apps.sunflower.compose.PlantDetailsCallbacks
+import com.google.samples.apps.sunflower.compose.PlantDetails
 import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Fab
 import com.google.samples.apps.sunflower.data.Plant
-import com.google.samples.apps.sunflower.utilities.testPlant
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,8 +45,8 @@ class PlantDetailFragmentTest {
     fun plantDetails_checkIsNotPlanted() {
         composeTestRule.setContent {
             PlantDetails(
-                plantObservable = MutableLiveData(plantForTesting()),
-                isPlantedObservable = MutableLiveData(false),
+                plant = plantForTesting(),
+                isPlanted = false,
                 callbacks = PlantDetailsCallbacks({ }, { }, { })
             )
         }
@@ -70,8 +59,8 @@ class PlantDetailFragmentTest {
     fun plantDetails_checkIsPlanted() {
         composeTestRule.setContent {
             PlantDetails(
-                plantObservable = MutableLiveData(plantForTesting()),
-                isPlantedObservable = MutableLiveData(true),
+                plant = plantForTesting(),
+                isPlanted = true,
                 callbacks = PlantDetailsCallbacks({ }, { }, { })
             )
         }
