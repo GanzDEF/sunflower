@@ -84,6 +84,7 @@ import androidx.ui.viewinterop.AndroidView
 import androidx.ui.viewmodel.viewModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.samples.apps.sunflower.R
+import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Fab
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
@@ -113,12 +114,14 @@ fun PlantDetailsScreen(
     onBackClicked: () -> Unit,
     onShareClicked: (String) -> Unit
 ) {
+    // ViewModel and LiveDatas needed to populate the plant details info on the screen
     val plantDetailsViewModel: PlantDetailViewModel = viewModel(
         factory = InjectorUtils.providePlantDetailViewModelFactory(ContextAmbient.current, plantId)
     )
     val plant = plantDetailsViewModel.plant.observeAsState().value
     val isPlanted = plantDetailsViewModel.isPlanted.observeAsState().value
 
+    // Every time there's a new value for plant or isPlanted LiveData, this block will get executed
     if (plant != null && isPlanted != null) {
         val context = ContextAmbient.current
         val view = ViewAmbient.current
@@ -145,9 +148,11 @@ fun PlantDetails(
     callbacks: PlantDetailsCallbacks,
     modifier: Modifier = Modifier
 ) {
+    // PlantDetails owns the scrollerPosition to simulate CollapsingToolbarLayout's behavior
     val scrollerPosition = ScrollerPosition()
     var toolbarState by state { ToolbarState.HIDDEN }
 
+    // Transition that fades in/out the header with the image and the Toolbar
     Transition(
         definition = toolbarTransitionDefinition,
         toState = toolbarState
@@ -164,7 +169,7 @@ fun PlantDetails(
                 callbacks = callbacks,
                 transitionState = transitionState
             )
-            PlantToolbar(toolbarState.toolbarShown, plant.name, callbacks, transitionState)
+            PlantHeader(toolbarState.toolbarShown, plant.name, callbacks, transitionState)
         }
     }
 }
@@ -180,7 +185,10 @@ private fun PlantDetailsContent(
     transitionState: TransitionState
 ) {
     VerticalScroller(scrollerPosition) {
+        // The header transition happens given the _original_ position of the name on the screen
         var namePosition by state { Float.MAX_VALUE }
+        // Whenever the name position or the scroller position changes,
+        // check if the toolbar should be shown or not
         onCommit(namePosition, scrollerPosition.value) {
             onToolbarShownUpdate(
                 scrollerPosition.value > (namePosition + HeaderTransitionOffset)
@@ -208,7 +216,7 @@ private fun PlantDetailsContent(
 }
 
 @Composable
-private fun PlantToolbar(
+private fun PlantHeader(
     toolbarShown: Boolean,
     plantName: String,
     callbacks: PlantDetailsCallbacks,
@@ -222,7 +230,7 @@ private fun PlantToolbar(
             modifier = Modifier.drawOpacity(transitionState[toolbarAlphaKey])
         )
     } else {
-        HeaderBarContent(
+        PlantHeaderActions(
             onBackClicked = callbacks.onBackClicked,
             onShareClicked = callbacks.onShareClicked,
             modifier = Modifier.drawOpacity(transitionState[contentAlphaKey])
@@ -290,7 +298,7 @@ private fun PlantImageHeader(
             FloatingActionButton(
                 onClick = onFabClicked,
                 shape = SunflowerFabShape,
-                modifier = fabModifier.testTag(SunflowerTestTags.PlantDetails_Fab)
+                modifier = fabModifier.testTag(PlantDetails_Fab)
             ) {
                 Icon(Icons.Filled.Add)
             }
@@ -314,12 +322,13 @@ private fun PlantImage(
 }
 
 @Composable
-private fun HeaderBarContent(
+private fun PlantHeaderActions(
     onBackClicked: () -> Unit,
     onShareClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(modifier.fillMaxSize().padding(top = StatusBarHeight + 12.dp), Arrangement.SpaceBetween) {
+
         val iconModifier = Modifier.sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
             .drawBackground(color = Color.White, shape = CircleShape)
 
@@ -384,6 +393,9 @@ private fun PlantDescription(description: String) {
     }
 }
 
+/**
+ * Gives a parallax effect to the content at the top of a [VerticalScroller].
+ */
 @Composable
 private fun ParallaxEffect(
     scrollerPosition: ScrollerPosition,
@@ -398,8 +410,8 @@ private fun ParallaxEffect(
 /**
  * Calculates offset FAB needs to keep aligned in the middle of the bottom of the picture.
  *
- * As the onPositioned in the image is invoked after scrollPosition has changed, there's a frame
- * delay.
+ * As the [Modifier.onPositioned] in the image is invoked after scrollPosition has changed,
+ * there's a frame delay.
  */
 @Composable
 private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): Dp {
@@ -410,8 +422,9 @@ private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): 
 
 /**
  * Hides an element on the screen leaving its space occupied.
- *
  * This should be replaced with the visible modifier in the future: b/158837937
+ *
+ * Disclaimer: This assumes that the content is visible before hiding it.
  */
 @Composable
 private fun Hide(hide: Boolean, content: @Composable (Modifier) -> Unit) {

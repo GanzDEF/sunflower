@@ -16,9 +16,7 @@
 
 package com.google.samples.apps.sunflower.compose
 
-import android.content.Context
 import androidx.annotation.PluralsRes
-import androidx.annotation.StringRes
 import androidx.compose.Composable
 import androidx.ui.core.ContextAmbient
 
