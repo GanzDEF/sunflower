@@ -30,6 +30,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.ui.core.setContent
 import androidx.ui.material.Surface
 import com.google.samples.apps.sunflower.compose.PlantDetailsScreen
+import com.google.samples.apps.sunflower.compose.ProvideInsets
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
 /**
@@ -44,30 +45,32 @@ class PlantDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        return inflater.inflate(
+            R.layout.fragment_plant_detail, container, false
+        ).apply {
+            systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
 
-        val view = inflater.inflate(R.layout.fragment_plant_detail, container, false)
-
-        val composeFrame = view?.findViewById<FrameLayout>(R.id.compose_frame)!!
-        composeFrame.setContent(Recomposer.current()) {
-            MaterialThemeFromMdcTheme(context = requireContext()) {
-                Surface {
-                    PlantDetailsScreen(
-                        args.plantId,
-                        onBackClicked = {
-                            view.findNavController().navigateUp()
-                        },
-                        onShareClicked = {
-                            createShareIntent(it)
+            findViewById<FrameLayout>(R.id.compose_frame)!!.apply {
+                setContent(Recomposer.current()) {
+                    MaterialThemeFromMdcTheme(context = requireContext()) {
+                        ProvideInsets {
+                            Surface {
+                                PlantDetailsScreen(
+                                    args.plantId,
+                                    onBackClicked = {
+                                        this.findNavController().navigateUp()
+                                    },
+                                    onShareClicked = {
+                                        createShareIntent(it)
+                                    }
+                                )
+                            }
                         }
-                    )
+                    }
                 }
             }
         }
-
-        view.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-
-        return view
     }
 
     // Helper function for calling a share functionality.

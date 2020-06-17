@@ -91,8 +91,6 @@ import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
 import dev.chrisbanes.accompanist.coil.CoilImageWithCrossfade
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
-// TODO: Change this for WindowsInsets
-private val StatusBarHeight = 24.dp
 private const val ParallaxDelta = 2f
 private const val HeaderTransitionOffset = 150f
 private val SunflowerFabShape =
@@ -246,8 +244,11 @@ private fun PlantDetailsToolbar(
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
-        Spacer( // TODO: This should react to WindowsInsets
-            Modifier.preferredHeight(StatusBarHeight).fillMaxWidth()
+        val spacerHeight = with(DensityAmbient.current) {
+            InsetsAmbient.current.systemBars.top.toDp()
+        }
+        Spacer(
+            Modifier.preferredHeight(spacerHeight).fillMaxWidth()
                 .drawBackground(MaterialTheme.colors.surface)
         )
         TopAppBar(
@@ -327,8 +328,10 @@ private fun PlantHeaderActions(
     onShareClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(modifier.fillMaxSize().padding(top = StatusBarHeight + 12.dp), Arrangement.SpaceBetween) {
-
+    Row(
+        modifier = modifier.fillMaxSize().systemBarsPadding(top = true).padding(top = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
         val iconModifier = Modifier.sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
             .drawBackground(color = Color.White, shape = CircleShape)
 
