@@ -19,5 +19,6 @@ package com.google.samples.apps.sunflower.compose
 class SunflowerTestTags {
     companion object {
         const val PlantDetails_Fab = "PlantDetails_Fab"
+        const val PlantDetails_Share = "PlantDetails_Share"
     }
 }

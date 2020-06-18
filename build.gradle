@@ -23,7 +23,7 @@ buildscript {
         targetSdkVersion = 28
 
         // App dependencies
-        accompanistVersion = '0.1.6.ui-6589751-SNAPSHOT'
+        accompanistVersion = '0.1.6.ui-6602655-SNAPSHOT'
         appCompatVersion = '1.1.0'
         composeKotlinCompilerVersion = '1.3.70-dev-withExperimentalGoogleExtensions-20200424'
         composeVersion = '0.1.0-SNAPSHOT'
@@ -76,24 +76,24 @@ allprojects {
         mavenCentral()
         // Needed for accompanist snapshots
         maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-        // Needed for ui-android-view - Points at dev13
-        maven { url 'https://androidx-dev-prod.appspot.com/snapshots/builds/6589751/artifacts/ui/repository/' }
+        // Needed for ui-android-view - Points at dev14
+        maven { url 'https://androidx-dev-prod.appspot.com/snapshots/builds/6602655/artifacts/ui/repository/' }
     }
 }
 
-spotless {
-    kotlin {
-        target "**/*.kt"
-        targetExclude("$buildDir/**/*.kt")
-        targetExclude('bin/**/*.kt')
-
-        ktlint(ktlintVersion).userData(
-                // Don't require parens on fun type annotations e.g. `@Composable~()~ () -> Unit`
-                // TODO: Remove when we move to Kotlin 1.4
-                ["disabled_rules": "paren-spacing"]
-        )
-    }
-}
+//spotless {
+//    kotlin {
+//        target "**/*.kt"
+//        targetExclude("$buildDir/**/*.kt")
+//        targetExclude('bin/**/*.kt')
+//
+//        ktlint(ktlintVersion).userData(
+//                // Don't require parens on fun type annotations e.g. `@Composable~()~ () -> Unit`
+//                // TODO: Remove when we move to Kotlin 1.4
+//                ["disabled_rules": "paren-spacing"]
+//        )
+//    }
+//}
 
 subprojects {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {

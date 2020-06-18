@@ -85,6 +85,7 @@ import androidx.ui.viewmodel.viewModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Fab
+import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Share
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
@@ -264,7 +265,10 @@ private fun PlantDetailsToolbar(
                 modifier = Modifier.weight(1f).fillMaxSize()
                     .wrapContentSize(Alignment.Center)
             )
-            IconButton(onShareClicked, Modifier.gravity(Alignment.CenterVertically)) {
+            IconButton(
+                onShareClicked,
+                Modifier.gravity(Alignment.CenterVertically).testTag(PlantDetails_Share)
+            ) {
                 Icon(Icons.Filled.Share)
             }
         }
@@ -343,7 +347,7 @@ private fun PlantHeaderActions(
         }
         IconButton(
             onClick = onShareClicked,
-            modifier = Modifier.padding(end = 12.dp).plus(iconModifier)
+            modifier = Modifier.padding(end = 12.dp).plus(iconModifier).testTag(PlantDetails_Share)
         ) {
             Icon(Icons.Filled.Share)
         }
