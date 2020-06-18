@@ -16,20 +16,16 @@
 
 package com.google.samples.apps.sunflower
 
-import android.content.ContentResolver
-import android.net.Uri
-import androidx.annotation.RawRes
 import androidx.compose.Composable
-import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.ui.core.ContextAmbient
 import androidx.ui.test.assertIsDisplayed
 import androidx.ui.test.createComposeRule
 import androidx.ui.test.findByTag
 import androidx.ui.test.findByText
-import com.google.samples.apps.sunflower.compose.PlantDetailsCallbacks
 import com.google.samples.apps.sunflower.compose.PlantDetails
+import com.google.samples.apps.sunflower.compose.PlantDetailsCallbacks
 import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Fab
+import com.google.samples.apps.sunflower.compose.rawUri
 import com.google.samples.apps.sunflower.data.Plant
 import org.junit.Rule
 import org.junit.Test
@@ -68,47 +64,6 @@ class PlantDetailComposeTest {
         findByText("Apple").assertIsDisplayed()
         findByTag(PlantDetails_Fab).assertDoesNotExist()
     }
-
-//    @get:Rule
-//    val composeTestRule = AndroidComposeTestRule<GardenActivity>()
-//
-//    @Before
-//    fun jumpToPlantDetailFragment() {
-//        composeTestRule.activityRule.scenario.onActivity { gardenActivity ->
-//            runOnUiThread {
-//                val bundle = Bundle().apply { putString("plantId", testPlant.plantId) }
-//                findNavController(gardenActivity, R.id.nav_host)
-//                    .navigate(R.id.plant_detail_fragment, bundle)
-//            }
-//        }
-//    }
-//
-//    @Ignore("Share button redesign pending")
-//    @Test
-//    fun testShareTextIntent() {
-//        val shareText = composeTestRule.activityTestRule.activity.getString(
-//            R.string.share_text_plant,
-//            testPlant.name
-//        )
-//
-//        Intents.init()
-//        onView(withId(R.id.action_share)).perform(click())
-//        intended(
-//            chooser(
-//                allOf(
-//                    hasAction(Intent.ACTION_SEND),
-//                    hasType("text/plain"),
-//                    hasExtra(Intent.EXTRA_TEXT, shareText)
-//                )
-//            )
-//        )
-//        Intents.release()
-//
-//        // dismiss the Share Dialog
-//        InstrumentationRegistry.getInstrumentation()
-//            .uiAutomation
-//            .performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
-//    }
 }
 
 @Composable
@@ -121,10 +76,4 @@ private fun plantForTesting(): Plant {
         wateringInterval = 30,
         imageUrl = rawUri(R.raw.apple).toString()
     )
-}
-
-@Composable
-fun rawUri(@RawRes id: Int): Uri {
-    return "${ContentResolver.SCHEME_ANDROID_RESOURCE}://${ContextAmbient.current.packageName}/$id"
-        .toUri()
 }

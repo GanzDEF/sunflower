@@ -16,8 +16,12 @@
 
 package com.google.samples.apps.sunflower.compose
 
+import android.content.ContentResolver
+import android.net.Uri
 import androidx.annotation.PluralsRes
+import androidx.annotation.RawRes
 import androidx.compose.Composable
+import androidx.core.net.toUri
 import androidx.ui.core.ContextAmbient
 
 /**
@@ -36,4 +40,13 @@ import androidx.ui.core.ContextAmbient
 fun getQuantityString(@PluralsRes id: Int, quantity: Int): String {
     val context = ContextAmbient.current
     return context.resources.getQuantityString(id, quantity, quantity)
+}
+
+/**
+ * Returns the Uri of a given raw resource
+ */
+@Composable
+fun rawUri(@RawRes id: Int): Uri {
+    return "${ContentResolver.SCHEME_ANDROID_RESOURCE}://${ContextAmbient.current.packageName}/$id"
+        .toUri()
 }
