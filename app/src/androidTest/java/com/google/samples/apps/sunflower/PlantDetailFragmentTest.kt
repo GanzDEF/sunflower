@@ -30,9 +30,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.ui.test.android.AndroidComposeTestRule
 import androidx.ui.test.assertIsDisplayed
 import androidx.ui.test.doClick
-import androidx.ui.test.findByTag
+import androidx.ui.test.findByLabel
 import androidx.ui.test.findByText
-import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Share
 import com.google.samples.apps.sunflower.utilities.chooser
 import org.hamcrest.Matchers.allOf
 import org.junit.Before
@@ -64,8 +63,7 @@ class PlantDetailFragmentTest {
         Intents.init()
 
         findByText("Apple").assertIsDisplayed()
-        findByTag(PlantDetails_Share).assertIsDisplayed()
-        findByTag(PlantDetails_Share).doClick()
+        findByLabel("Share").assertIsDisplayed().doClick()
 
         intended(
             chooser(

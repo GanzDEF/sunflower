@@ -20,13 +20,13 @@ import androidx.compose.Composable
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.ui.test.assertIsDisplayed
 import androidx.ui.test.createComposeRule
-import androidx.ui.test.findByTag
+import androidx.ui.test.findByLabel
 import androidx.ui.test.findByText
 import com.google.samples.apps.sunflower.compose.PlantDetails
 import com.google.samples.apps.sunflower.compose.PlantDetailsCallbacks
-import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Fab
 import com.google.samples.apps.sunflower.compose.rawUri
 import com.google.samples.apps.sunflower.data.Plant
+import com.google.samples.apps.sunflower.test.R
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,7 +48,7 @@ class PlantDetailComposeTest {
         }
 
         findByText("Apple").assertIsDisplayed()
-        findByTag(PlantDetails_Fab).assertExists()
+        findByLabel("Add plant").assertIsDisplayed()
     }
 
     @Test
@@ -62,7 +62,7 @@ class PlantDetailComposeTest {
         }
 
         findByText("Apple").assertIsDisplayed()
-        findByTag(PlantDetails_Fab).assertDoesNotExist()
+        findByLabel("Add plant").assertDoesNotExist()
     }
 }
 

@@ -40,7 +40,7 @@ import androidx.ui.core.drawLayer
 import androidx.ui.core.drawOpacity
 import androidx.ui.core.globalPosition
 import androidx.ui.core.onPositioned
-import androidx.ui.core.testTag
+import androidx.ui.core.semantics.semantics
 import androidx.ui.foundation.Box
 import androidx.ui.foundation.Icon
 import androidx.ui.foundation.ScrollerPosition
@@ -75,6 +75,7 @@ import androidx.ui.material.icons.filled.Add
 import androidx.ui.material.icons.filled.ArrowBack
 import androidx.ui.material.icons.filled.Share
 import androidx.ui.res.stringResource
+import androidx.ui.semantics.accessibilityLabel
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.Dp
@@ -84,8 +85,6 @@ import androidx.ui.viewinterop.AndroidView
 import androidx.ui.viewmodel.viewModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.samples.apps.sunflower.R
-import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Fab
-import com.google.samples.apps.sunflower.compose.SunflowerTestTags.Companion.PlantDetails_Share
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
@@ -265,9 +264,12 @@ private fun PlantDetailsToolbar(
                 modifier = Modifier.weight(1f).fillMaxSize()
                     .wrapContentSize(Alignment.Center)
             )
+            val shareA11yLabel = stringResource(R.string.menu_item_share_plant)
             IconButton(
                 onShareClicked,
-                Modifier.gravity(Alignment.CenterVertically).testTag(PlantDetails_Share)
+                Modifier.gravity(Alignment.CenterVertically).semantics {
+                    accessibilityLabel = shareA11yLabel
+                }
             ) {
                 Icon(Icons.Filled.Share)
             }
@@ -300,10 +302,13 @@ private fun PlantImageHeader(
             } else {
                 Modifier
             }
+            val fabA11yLabel = stringResource(R.string.add_plant)
             FloatingActionButton(
                 onClick = onFabClicked,
                 shape = SunflowerFabShape,
-                modifier = fabModifier.testTag(PlantDetails_Fab)
+                modifier = fabModifier.semantics {
+                    accessibilityLabel = fabA11yLabel
+                }
             ) {
                 Icon(Icons.Filled.Add)
             }
@@ -345,9 +350,12 @@ private fun PlantHeaderActions(
         ) {
             Icon(Icons.Filled.ArrowBack)
         }
+        val shareA11yLabel = stringResource(R.string.menu_item_share_plant)
         IconButton(
             onClick = onShareClicked,
-            modifier = Modifier.padding(end = 12.dp).plus(iconModifier).testTag(PlantDetails_Share)
+            modifier = Modifier.padding(end = 12.dp).plus(iconModifier).semantics {
+                accessibilityLabel = shareA11yLabel
+            }
         ) {
             Icon(Icons.Filled.Share)
         }
