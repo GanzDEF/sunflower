@@ -54,7 +54,7 @@ class PlantDetailFragmentTest {
     }
 
     @Test
-    fun app_launches() {
+    fun screen_launches() {
         findByText("Apple").assertIsDisplayed()
     }
 

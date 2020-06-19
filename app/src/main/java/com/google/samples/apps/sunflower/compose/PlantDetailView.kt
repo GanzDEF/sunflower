@@ -264,11 +264,11 @@ private fun PlantDetailsToolbar(
                 modifier = Modifier.weight(1f).fillMaxSize()
                     .wrapContentSize(Alignment.Center)
             )
-            val shareA11yLabel = stringResource(R.string.menu_item_share_plant)
+            val shareAccessibilityLabel = stringResource(R.string.menu_item_share_plant)
             IconButton(
                 onShareClicked,
                 Modifier.gravity(Alignment.CenterVertically).semantics {
-                    accessibilityLabel = shareA11yLabel
+                    accessibilityLabel = shareAccessibilityLabel
                 }
             ) {
                 Icon(Icons.Filled.Share)
@@ -302,12 +302,12 @@ private fun PlantImageHeader(
             } else {
                 Modifier
             }
-            val fabA11yLabel = stringResource(R.string.add_plant)
+            val fabAccessibilityLabel = stringResource(R.string.add_plant)
             FloatingActionButton(
                 onClick = onFabClicked,
                 shape = SunflowerFabShape,
                 modifier = fabModifier.semantics {
-                    accessibilityLabel = fabA11yLabel
+                    accessibilityLabel = fabAccessibilityLabel
                 }
             ) {
                 Icon(Icons.Filled.Add)
@@ -350,11 +350,11 @@ private fun PlantHeaderActions(
         ) {
             Icon(Icons.Filled.ArrowBack)
         }
-        val shareA11yLabel = stringResource(R.string.menu_item_share_plant)
+        val shareAccessibilityLabel = stringResource(R.string.menu_item_share_plant)
         IconButton(
             onClick = onShareClicked,
             modifier = Modifier.padding(end = 12.dp).plus(iconModifier).semantics {
-                accessibilityLabel = shareA11yLabel
+                accessibilityLabel = shareAccessibilityLabel
             }
         ) {
             Icon(Icons.Filled.Share)
@@ -439,7 +439,7 @@ private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): 
  * Hides an element on the screen leaving its space occupied.
  * This should be replaced with the visible modifier in the future: b/158837937
  *
- * Disclaimer: This assumes that the content is visible before hiding it.
+ * Disclaimer: This implementation assumes that the content is visible before hiding it.
  */
 @Composable
 private fun Hide(hide: Boolean, content: @Composable (Modifier) -> Unit) {
@@ -458,6 +458,7 @@ private fun Hide(hide: Boolean, content: @Composable (Modifier) -> Unit) {
     }
 }
 
+// Toolbar state related classes and functions to achieve the CollapsingToolbarLayout animation
 private enum class ToolbarState { HIDDEN, SHOWN }
 
 private val ToolbarState.toolbarShown: Boolean
