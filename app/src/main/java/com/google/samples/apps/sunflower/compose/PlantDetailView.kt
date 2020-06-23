@@ -48,8 +48,6 @@ import androidx.ui.foundation.Text
 import androidx.ui.foundation.VerticalScroller
 import androidx.ui.foundation.drawBackground
 import androidx.ui.foundation.shape.corner.CircleShape
-import androidx.ui.foundation.shape.corner.RoundedCornerShape
-import androidx.ui.graphics.Color
 import androidx.ui.layout.Arrangement
 import androidx.ui.layout.Column
 import androidx.ui.layout.ColumnScope.gravity
@@ -65,9 +63,11 @@ import androidx.ui.layout.size
 import androidx.ui.layout.sizeIn
 import androidx.ui.layout.wrapContentSize
 import androidx.ui.livedata.observeAsState
+import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.FloatingActionButton
 import androidx.ui.material.IconButton
 import androidx.ui.material.MaterialTheme
+import androidx.ui.material.ProvideEmphasis
 import androidx.ui.material.Surface
 import androidx.ui.material.TopAppBar
 import androidx.ui.material.icons.Icons
@@ -93,8 +93,6 @@ import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
 private const val ParallaxDelta = 2f
 private const val HeaderTransitionOffset = 150f
-private val SunflowerFabShape =
-    RoundedCornerShape(topLeft = 0.dp, topRight = 30.dp, bottomRight = 0.dp, bottomLeft = 30.dp)
 
 /**
  * As these callbacks are passed in through multiple Composables, to avoid having to name
@@ -124,17 +122,19 @@ fun PlantDetailsScreen(
         val context = ContextAmbient.current
         val view = ViewAmbient.current
 
-        PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
-            onBackClicked = onBackClicked,
-            onFabClicked = {
-                plantDetailsViewModel.addPlantToGarden()
-                Snackbar.make(view, R.string.added_plant_to_garden, Snackbar.LENGTH_LONG).show()
-            },
-            onShareClicked = {
-                val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
-                onShareClicked(shareText)
-            }
-        ))
+        Surface {
+            PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
+                onBackClicked = onBackClicked,
+                onFabClicked = {
+                    plantDetailsViewModel.addPlantToGarden()
+                    Snackbar.make(view, R.string.added_plant_to_garden, Snackbar.LENGTH_LONG).show()
+                },
+                onShareClicked = {
+                    val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
+                    onShareClicked(shareText)
+                }
+            ))
+        }
     }
 }
 
@@ -159,9 +159,7 @@ fun PlantDetails(
             PlantDetailsContent(
                 scrollerPosition = scrollerPosition,
                 toolbarShown = toolbarState.toolbarShown,
-                onToolbarShownUpdate = { newValue ->
-                    toolbarState = toolbarStateFromBoolean(newValue)
-                },
+                onToolbarShownUpdate = { newState -> toolbarState = newState },
                 plant = plant,
                 isPlanted = isPlanted,
                 callbacks = callbacks,
@@ -176,7 +174,7 @@ fun PlantDetails(
 private fun PlantDetailsContent(
     scrollerPosition: ScrollerPosition,
     toolbarShown: Boolean,
-    onToolbarShownUpdate: (Boolean) -> Unit,
+    onToolbarShownUpdate: (ToolbarState) -> Unit,
     plant: Plant,
     isPlanted: Boolean,
     callbacks: PlantDetailsCallbacks,
@@ -189,14 +187,16 @@ private fun PlantDetailsContent(
         // check if the toolbar should be shown or not
         onCommit(namePosition, scrollerPosition.value) {
             onToolbarShownUpdate(
-                scrollerPosition.value > (namePosition + HeaderTransitionOffset)
+                toolbarStateFromBoolean(
+                    scrollerPosition.value > (namePosition + HeaderTransitionOffset)
+                )
             )
         }
 
         Hide(toolbarShown) { hideModifier ->
             PlantImageHeader(
                 scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted, hideModifier,
-                Modifier.drawLayer(alpha = transitionState[contentAlphaKey], clip = false)
+                Modifier.drawLayer(alpha = transitionState[contentAlphaKey])
             )
         }
         PlantInformation(
@@ -259,8 +259,8 @@ private fun PlantDetailsToolbar(
             }
             Text(
                 text = plantName,
-                color = MaterialTheme.colors.onSurface,
                 style = MaterialTheme.typography.h6,
+                // As title in TopAppBar has extra inset on the left, need to do this: b/158829169
                 modifier = Modifier.weight(1f).fillMaxSize()
                     .wrapContentSize(Alignment.Center)
             )
@@ -286,18 +286,18 @@ private fun PlantImageHeader(
     modifier: Modifier = Modifier,
     transitionModifier: Modifier = Modifier
 ) {
-    val imageHeight = state { 0 }
+    var imageHeight by state { 0 }
 
     Stack(modifier.fillMaxWidth()) {
         PlantImage(scrollerPosition, imageUrl, transitionModifier.onPositioned {
-            imageHeight.value = it.size.height
+            imageHeight = it.size.height
         })
         if (!isPlanted) {
-            val fabModifier = if (imageHeight.value != 0) {
+            val fabModifier = if (imageHeight != 0) {
                 Modifier
                     .gravity(Alignment.TopEnd)
                     .padding(end = 8.dp)
-                    .offset(y = getFabOffset(imageHeight.value, scrollerPosition))
+                    .offset(y = getFabOffset(imageHeight, scrollerPosition))
                     .plus(transitionModifier)
             } else {
                 Modifier
@@ -305,7 +305,7 @@ private fun PlantImageHeader(
             val fabAccessibilityLabel = stringResource(R.string.add_plant)
             FloatingActionButton(
                 onClick = onFabClicked,
-                shape = SunflowerFabShape,
+                shape = MaterialTheme.shapes.small,
                 modifier = fabModifier.semantics {
                     accessibilityLabel = fabAccessibilityLabel
                 }
@@ -342,7 +342,7 @@ private fun PlantHeaderActions(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val iconModifier = Modifier.sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
-            .drawBackground(color = Color.White, shape = CircleShape)
+            .drawBackground(color = MaterialTheme.colors.surface, shape = CircleShape)
 
         IconButton(
             onClick = onBackClicked,
@@ -384,17 +384,16 @@ private fun PlantInformation(
         Text(
             text = stringResource(id = R.string.watering_needs_prefix),
             color = MaterialTheme.colors.primaryVariant,
-            style = MaterialTheme.typography.body1.copy(
-                fontWeight = FontWeight.Bold
-            ),
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 8.dp).gravity(Alignment.CenterHorizontally)
         )
-        Text(
-            text = getQuantityString(R.plurals.watering_needs_suffix, wateringInterval),
-            color = MaterialTheme.colors.onBackground.copy(alpha = 0.6f),
-            modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
-                .gravity(Alignment.CenterHorizontally)
-        )
+        ProvideEmphasis(emphasis = EmphasisAmbient.current.medium) {
+            Text(
+                text = getQuantityString(R.plurals.watering_needs_suffix, wateringInterval),
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
+                    .gravity(Alignment.CenterHorizontally)
+            )
+        }
         PlantDescription(description)
     }
 }

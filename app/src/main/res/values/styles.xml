@@ -37,6 +37,7 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="windowActionBarOverlay">true</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Sunflower.FAB</item>
     </style>
 
     <style name="Theme.Sunflower.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar"/>

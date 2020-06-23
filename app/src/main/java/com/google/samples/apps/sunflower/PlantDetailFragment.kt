@@ -28,7 +28,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.ui.core.setContent
-import androidx.ui.material.Surface
 import com.google.samples.apps.sunflower.compose.PlantDetailsScreen
 import com.google.samples.apps.sunflower.compose.ProvideInsets
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
@@ -55,17 +54,15 @@ class PlantDetailFragment : Fragment() {
                 setContent(Recomposer.current()) {
                     MaterialThemeFromMdcTheme(context = requireContext()) {
                         ProvideInsets {
-                            Surface {
-                                PlantDetailsScreen(
-                                    args.plantId,
-                                    onBackClicked = {
-                                        this.findNavController().navigateUp()
-                                    },
-                                    onShareClicked = {
-                                        createShareIntent(it)
-                                    }
-                                )
-                            }
+                            PlantDetailsScreen(
+                                args.plantId,
+                                onBackClicked = {
+                                    this.findNavController().navigateUp()
+                                },
+                                onShareClicked = {
+                                    createShareIntent(it)
+                                }
+                            )
                         }
                     }
                 }
