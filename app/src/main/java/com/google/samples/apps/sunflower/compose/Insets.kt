@@ -16,15 +16,14 @@
 
 package com.google.samples.apps.sunflower.compose
 
-import android.util.Log
 import androidx.compose.Composable
 import androidx.compose.Immutable
 import androidx.compose.Providers
-import androidx.compose.ambientOf
 import androidx.compose.getValue
 import androidx.compose.onCommit
 import androidx.compose.setValue
 import androidx.compose.state
+import androidx.compose.staticAmbientOf
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -43,23 +42,20 @@ import androidx.ui.unit.dp
 /**
  * Main holder of our inset values.
  */
-data class ComposeInsets(
+data class Insets(
     val systemBars: Rect = Rect.zero
 )
 
-val InsetsAmbient = ambientOf { ComposeInsets() }
+val InsetsAmbient = staticAmbientOf { Insets() }
 
 @Composable
-fun ProvideInsets(children: @Composable () -> Unit) {
+fun ProvideInsets(content: @Composable () -> Unit) {
     val view = ViewAmbient.current
-    var insetsHolder by state { ComposeInsets() }
-    Log.e("TEST", insetsHolder.toString())
+    var insetsHolder by state { Insets() }
 
     onCommit(view.id) {
-        Log.e("TEST", "On Commit called")
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
             insetsHolder = insets.toComposeInsets()
-            Log.e("TEST", insetsHolder.toString())
             // Return the unconsumed insets
             insets
         }
@@ -73,7 +69,7 @@ fun ProvideInsets(children: @Composable () -> Unit) {
         }
     }
 
-    Providers(InsetsAmbient provides insetsHolder, children = children)
+    Providers(InsetsAmbient provides insetsHolder, children = content)
 }
 
 fun Modifier.systemBarsPadding(all: Boolean = false) = systemBarsPadding(all, all, all, all)
@@ -92,7 +88,7 @@ fun Modifier.systemBarsPadding(
 /**
  * Allows conditional setting of [padding] on each dimension.
  */
-fun Modifier.absolutePadding(
+private fun Modifier.absolutePadding(
     padding: AbsoluteInnerPadding,
     left: Boolean = false,
     top: Boolean = false,
@@ -108,7 +104,7 @@ fun Modifier.absolutePadding(
 /**
  * Allows conditional setting of [padding] on each dimension.
  */
-fun Modifier.absolutePadding(padding: AbsoluteInnerPadding) = absolutePadding(
+private fun Modifier.absolutePadding(padding: AbsoluteInnerPadding) = absolutePadding(
     left = padding.left,
     top = padding.top,
     right = padding.right,
@@ -117,7 +113,7 @@ fun Modifier.absolutePadding(padding: AbsoluteInnerPadding) = absolutePadding(
 
 private fun Insets.toRect() = Rect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat())
 
-private fun WindowInsetsCompat.toComposeInsets() = ComposeInsets(
+private fun WindowInsetsCompat.toComposeInsets() = Insets(
     systemBars = systemWindowInsets.toRect()
 )
 
@@ -126,7 +122,7 @@ private fun Rect.toAbsoluteInnerPadding(density: Density) = with(density) {
 }
 
 @Immutable
-data class AbsoluteInnerPadding(
+private data class AbsoluteInnerPadding(
     val left: Dp = 0.dp,
     val top: Dp = 0.dp,
     val right: Dp = 0.dp,
