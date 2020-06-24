@@ -195,12 +195,11 @@ private fun PlantDetailsContent(
             )
         }
 
-        Hide(toolbarShown) { hideModifier ->
-            PlantImageHeader(
-                scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted, hideModifier,
-                Modifier.drawLayer(alpha = transitionState[contentAlphaKey])
-            )
-        }
+        PlantImageHeader(
+            scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted,
+            Modifier.visible(!toolbarShown),
+            Modifier.drawLayer(alpha = transitionState[contentAlphaKey])
+        )
         PlantInformation(
             name = plant.name,
             wateringInterval = plant.wateringInterval,
@@ -373,16 +372,16 @@ private fun PlantInformation(
     toolbarShown: Boolean
 ) {
     Box(modifier = Modifier.padding(24.dp)) {
-        Hide(toolbarShown) { hideModifier ->
-            Text(
-                text = name,
-                style = MaterialTheme.typography.h5,
-                modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
-                    .gravity(Alignment.CenterHorizontally).onPositioned {
-                        onNamePositioned(it)
-                    }.plus(hideModifier)
-            )
-        }
+        Text(
+            text = name,
+            style = MaterialTheme.typography.h5,
+            modifier = Modifier
+                .padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
+                .gravity(Alignment.CenterHorizontally)
+                .onPositioned {
+                    onNamePositioned(it)
+                }.visible(!toolbarShown)
+        )
         Text(
             text = stringResource(id = R.string.watering_needs_prefix),
             color = MaterialTheme.colors.primaryVariant,
