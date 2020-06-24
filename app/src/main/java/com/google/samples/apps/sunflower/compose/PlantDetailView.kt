@@ -75,6 +75,7 @@ import androidx.ui.res.stringResource
 import androidx.ui.semantics.accessibilityLabel
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
+import androidx.ui.unit.Density
 import androidx.ui.unit.Dp
 import androidx.ui.unit.dp
 import androidx.ui.viewinterop.AndroidView
@@ -316,16 +317,17 @@ private fun PlantImage(
     modifier: Modifier = Modifier,
     placeholderColor: Color = MaterialTheme.colors.onSurface.copy(0.2f)
 ) {
-    ParallaxEffect(scrollerPosition, ParallaxDelta, modifier) { parallaxModifier ->
-        CoilImageWithCrossfade(
-            data = imageUrl,
-            contentScale = ContentScale.Crop,
-            loading = {
-                Box(modifier = Modifier.fillMaxSize(), backgroundColor = placeholderColor)
-            },
-            modifier = parallaxModifier.fillMaxWidth().preferredHeight(278.dp)
-        )
+    val parallaxOffset = with(DensityAmbient.current) {
+        scrollerParallaxOffset(scrollerPosition)
     }
+    CoilImageWithCrossfade(
+        data = imageUrl,
+        contentScale = ContentScale.Crop,
+        loading = {
+            Box(modifier = Modifier.fillMaxSize(), backgroundColor = placeholderColor)
+        },
+        modifier = modifier.fillMaxWidth().padding(top = parallaxOffset).preferredHeight(278.dp)
+    )
 }
 
 @Composable
@@ -413,9 +415,14 @@ private fun PlantDescription(description: String) {
 @Composable
 private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): Dp {
     return with(DensityAmbient.current) {
-        imageHeight.toDp() + (scrollerPosition.value / ParallaxDelta).toDp() - (56 / 2).dp
+        imageHeight.toDp() + scrollerParallaxOffset(scrollerPosition) - (56 / 2).dp
     }
 }
+
+@Composable
+private fun Density.scrollerParallaxOffset(
+    scrollerPosition: ScrollerPosition
+): Dp = (scrollerPosition.value / ParallaxDelta).toDp()
 
 // Toolbar state related classes and functions to achieve the CollapsingToolbarLayout animation
 private enum class ToolbarState { HIDDEN, SHOWN }
