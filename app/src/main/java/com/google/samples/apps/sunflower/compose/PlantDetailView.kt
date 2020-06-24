@@ -47,11 +47,10 @@ import androidx.ui.foundation.Text
 import androidx.ui.foundation.VerticalScroller
 import androidx.ui.foundation.drawBackground
 import androidx.ui.foundation.shape.corner.CircleShape
+import androidx.ui.graphics.Color
 import androidx.ui.layout.Arrangement
-import androidx.ui.layout.Column
 import androidx.ui.layout.ColumnScope.gravity
 import androidx.ui.layout.Row
-import androidx.ui.layout.Spacer
 import androidx.ui.layout.Stack
 import androidx.ui.layout.fillMaxSize
 import androidx.ui.layout.fillMaxWidth
@@ -197,7 +196,7 @@ private fun PlantDetailsContent(
 
         PlantImageHeader(
             scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted,
-            Modifier.visible(!toolbarShown),
+            Modifier.visible { !toolbarShown },
             Modifier.drawLayer(alpha = transitionState[contentAlphaKey])
         )
         PlantInformation(
@@ -244,14 +243,7 @@ private fun PlantDetailsToolbar(
     onShareClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier) {
-        val spacerHeight = with(DensityAmbient.current) {
-            InsetsAmbient.current.systemBars.top.toDp()
-        }
-        Spacer(
-            Modifier.preferredHeight(spacerHeight).fillMaxWidth()
-                .drawBackground(MaterialTheme.colors.surface)
-        )
+    Surface(modifier.systemBarsPadding(top = true)) {
         TopAppBar(
             backgroundColor = MaterialTheme.colors.surface
         ) {
@@ -321,12 +313,16 @@ private fun PlantImageHeader(
 private fun PlantImage(
     scrollerPosition: ScrollerPosition,
     imageUrl: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    placeholderColor: Color = MaterialTheme.colors.onSurface.copy(0.2f)
 ) {
     ParallaxEffect(scrollerPosition, ParallaxDelta, modifier) { parallaxModifier ->
         CoilImageWithCrossfade(
             data = imageUrl,
             contentScale = ContentScale.Crop,
+            loading = {
+                Box(modifier = Modifier.fillMaxSize(), backgroundColor = placeholderColor)
+            },
             modifier = parallaxModifier.fillMaxWidth().preferredHeight(278.dp)
         )
     }
@@ -380,7 +376,7 @@ private fun PlantInformation(
                 .gravity(Alignment.CenterHorizontally)
                 .onPositioned {
                     onNamePositioned(it)
-                }.visible(!toolbarShown)
+                }.visible { !toolbarShown }
         )
         Text(
             text = stringResource(id = R.string.watering_needs_prefix),

@@ -22,18 +22,18 @@ import androidx.ui.core.LayoutModifier
 import androidx.ui.core.Measurable
 import androidx.ui.core.MeasureScope
 import androidx.ui.core.Modifier
-import androidx.ui.core.composed
 
 /**
  * Hides an element on the screen leaving its space occupied.
  * This should be replaced with the real visible modifier in the future: b/158837937
+ *
+ * isVisible is of type () -> Boolean because if the calling composable doesn't own the
+ * state boolean of that Boolean, a read (recompose) will be avoided.
  */
-fun Modifier.visible(isVisible: Boolean) = composed {
-    VisibleModifier(isVisible)
-}
+fun Modifier.visible(isVisible: () -> Boolean) = this + VisibleModifier(isVisible)
 
 private data class VisibleModifier(
-    private val isVisible: Boolean
+    private val isVisible: () -> Boolean
 ) : LayoutModifier {
     override fun MeasureScope.measure(
         measurable: Measurable,
@@ -42,7 +42,7 @@ private data class VisibleModifier(
     ): MeasureScope.MeasureResult {
         val placeable = measurable.measure(constraints)
         return layout(placeable.width, placeable.height) {
-            if (isVisible) {
+            if (isVisible()) {
                 placeable.place(0, 0)
             }
         }
