@@ -18,13 +18,13 @@ package com.google.samples.apps.sunflower.compose
 
 import android.widget.TextView
 import androidx.animation.FloatPropKey
+import androidx.animation.Spring.StiffnessLow
 import androidx.animation.TransitionState
 import androidx.animation.transitionDefinition
 import androidx.annotation.VisibleForTesting
 import androidx.compose.Composable
 import androidx.compose.getValue
 import androidx.compose.onCommit
-import androidx.compose.remember
 import androidx.compose.setValue
 import androidx.compose.state
 import androidx.core.text.HtmlCompat
@@ -35,7 +35,6 @@ import androidx.ui.core.ContextAmbient
 import androidx.ui.core.DensityAmbient
 import androidx.ui.core.LayoutCoordinates
 import androidx.ui.core.Modifier
-import androidx.ui.core.ViewAmbient
 import androidx.ui.core.drawLayer
 import androidx.ui.core.drawOpacity
 import androidx.ui.core.globalPosition
@@ -59,7 +58,6 @@ import androidx.ui.layout.fillMaxWidth
 import androidx.ui.layout.offset
 import androidx.ui.layout.padding
 import androidx.ui.layout.preferredHeight
-import androidx.ui.layout.size
 import androidx.ui.layout.sizeIn
 import androidx.ui.layout.wrapContentSize
 import androidx.ui.livedata.observeAsState
@@ -79,11 +77,9 @@ import androidx.ui.semantics.accessibilityLabel
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.Dp
-import androidx.ui.unit.IntSize
 import androidx.ui.unit.dp
 import androidx.ui.viewinterop.AndroidView
 import androidx.ui.viewmodel.viewModel
-import com.google.android.material.snackbar.Snackbar
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
@@ -120,20 +116,26 @@ fun PlantDetailsScreen(
     // Every time there's a new value for plant or isPlanted LiveData, this block will get executed
     if (plant != null && isPlanted != null) {
         val context = ContextAmbient.current
-        val view = ViewAmbient.current
-
         Surface {
-            PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
-                onBackClicked = onBackClicked,
-                onFabClicked = {
-                    plantDetailsViewModel.addPlantToGarden()
-                    Snackbar.make(view, R.string.added_plant_to_garden, Snackbar.LENGTH_LONG).show()
-                },
-                onShareClicked = {
-                    val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
-                    onShareClicked(shareText)
-                }
-            ))
+            var showSnackbar by state { false }
+
+            TextSnackbarHolder(
+                snackbarText = stringResource(R.string.added_plant_to_garden),
+                showSnackbar = showSnackbar,
+                onDismissSnackbar = { showSnackbar = false }
+            ) {
+                PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
+                    onBackClicked = onBackClicked,
+                    onFabClicked = {
+                        plantDetailsViewModel.addPlantToGarden()
+                        showSnackbar = true
+                    },
+                    onShareClicked = {
+                        val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
+                        onShareClicked(shareText)
+                    }
+                ))
+            }
         }
     }
 }
@@ -322,7 +324,7 @@ private fun PlantImage(
     imageUrl: String,
     modifier: Modifier = Modifier
 ) {
-    ParallaxEffect(scrollerPosition, modifier) { parallaxModifier ->
+    ParallaxEffect(scrollerPosition, ParallaxDelta, modifier) { parallaxModifier ->
         CoilImageWithCrossfade(
             data = imageUrl,
             contentScale = ContentScale.Crop,
@@ -408,20 +410,6 @@ private fun PlantDescription(description: String) {
 }
 
 /**
- * Gives a parallax effect to the content at the top of a [VerticalScroller].
- */
-@Composable
-private fun ParallaxEffect(
-    scrollerPosition: ScrollerPosition,
-    modifier: Modifier = Modifier,
-    content: @Composable (Modifier) -> Unit
-) {
-    val offset = scrollerPosition.value / ParallaxDelta
-    val offsetDp = with(DensityAmbient.current) { offset.toDp() }
-    content(Modifier.padding(top = offsetDp).plus(modifier))
-}
-
-/**
  * Calculates offset FAB needs to keep aligned in the middle of the bottom of the picture.
  *
  * As the [Modifier.onPositioned] in the image is invoked after scrollPosition has changed,
@@ -431,29 +419,6 @@ private fun ParallaxEffect(
 private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): Dp {
     return with(DensityAmbient.current) {
         imageHeight.toDp() + (scrollerPosition.value / ParallaxDelta).toDp() - (56 / 2).dp
-    }
-}
-
-/**
- * Hides an element on the screen leaving its space occupied.
- * This should be replaced with the visible modifier in the future: b/158837937
- *
- * Disclaimer: This implementation assumes that the content is visible before hiding it.
- */
-@Composable
-private fun Hide(hide: Boolean, content: @Composable (Modifier) -> Unit) {
-    var contentSize by state { IntSize.Zero }
-    if (hide) {
-        val (width, height) = remember(contentSize) {
-            with(DensityAmbient.current) {
-                contentSize.width.toDp() to contentSize.height.toDp()
-            }
-        }
-        Spacer(modifier = Modifier.size(width, height))
-    } else {
-        content(Modifier.onPositioned {
-            contentSize = it.size
-        })
     }
 }
 
@@ -480,11 +445,11 @@ private val toolbarTransitionDefinition = transitionDefinition {
         this[contentAlphaKey] = 0f
     }
     transition {
-        toolbarAlphaKey using tween<Float> {
-            duration = 250
+        toolbarAlphaKey using physics<Float> {
+            stiffness = StiffnessLow
         }
-        contentAlphaKey using tween<Float> {
-            duration = 250
+        contentAlphaKey using physics<Float> {
+            stiffness = StiffnessLow
         }
     }
 }
