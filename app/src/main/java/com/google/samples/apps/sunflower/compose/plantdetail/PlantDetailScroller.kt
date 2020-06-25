@@ -25,7 +25,7 @@ import androidx.ui.unit.Density
 import androidx.ui.unit.Dp
 
 private const val HeaderTransitionOffset = 150f
-private const val ParallaxDelta = 2f
+private const val ParallaxFactor = 2f
 
 /**
  * Class that contains derived state for when the toolbar should be shown
@@ -35,21 +35,18 @@ data class PlantDetailsScroller(
     val namePosition: Float
 ) {
     val toolbarState: ToolbarState
-        get() = toolbarStateFromBoolean(
-            namePosition != 0f &&
+        get() =
+            if (namePosition != 0f &&
                 scrollerPosition.value > (namePosition + HeaderTransitionOffset)
-        )
-
-    val toolbarShown: Boolean
-        get() = toolbarState == ToolbarState.SHOWN
+            ) {
+                ToolbarState.SHOWN
+            } else {
+                ToolbarState.HIDDEN
+            }
 }
 
 // Toolbar state related classes and functions to achieve the CollapsingToolbarLayout animation
 enum class ToolbarState { HIDDEN, SHOWN }
-
-private fun toolbarStateFromBoolean(show: Boolean): ToolbarState =
-    if (show) ToolbarState.SHOWN
-    else ToolbarState.HIDDEN
 
 val toolbarAlphaKey = FloatPropKey()
 val contentAlphaKey = FloatPropKey()
@@ -76,4 +73,4 @@ val toolbarTransitionDefinition = transitionDefinition {
 @Composable
 fun Density.scrollerParallaxOffset(
     scrollerPosition: ScrollerPosition
-): Dp = (scrollerPosition.value / ParallaxDelta).toDp()
+): Dp = (scrollerPosition.value / ParallaxFactor).toDp()

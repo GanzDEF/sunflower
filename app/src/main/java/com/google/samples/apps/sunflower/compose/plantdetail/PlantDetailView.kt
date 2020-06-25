@@ -112,7 +112,6 @@ fun PlantDetailsScreen(
 
     // Every time there's a new value for plant or isPlanted LiveData, this block will get executed
     if (plant != null && isPlanted != null) {
-        val context = ContextAmbient.current
         Surface {
             var showSnackbar by state { false }
 
@@ -121,6 +120,7 @@ fun PlantDetailsScreen(
                 showSnackbar = showSnackbar,
                 onDismissSnackbar = { showSnackbar = false }
             ) {
+                val context = ContextAmbient.current
                 PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
                     onBackClicked = onBackClicked,
                     onFabClicked = {
@@ -147,7 +147,7 @@ fun PlantDetails(
 ) {
     // PlantDetails owns the scrollerPosition to simulate CollapsingToolbarLayout's behavior
     val scrollerPosition = ScrollerPosition()
-    var plantScroller by state { PlantDetailsScroller(scrollerPosition, 0f) }
+    var plantScroller by state { PlantDetailsScroller(scrollerPosition, Float.MIN_VALUE) }
 
     // Transition that fades in/out the header with the image and the Toolbar
     Transition(
@@ -157,9 +157,11 @@ fun PlantDetails(
         Stack(modifier) {
             PlantDetailsContent(
                 scrollerPosition = plantScroller.scrollerPosition,
-                toolbarShown = plantScroller.toolbarShown,
+                toolbarState = plantScroller.toolbarState,
                 onNamePositioned = { newNamePosition ->
-                    if (plantScroller.namePosition == 0f) {
+                    // Comparing to Float.MIN_VALUE as we are just interested on the original
+                    // position of name on the screen
+                    if (plantScroller.namePosition == Float.MIN_VALUE) {
                         plantScroller = plantScroller.copy(namePosition = newNamePosition)
                     }
                 },
@@ -168,7 +170,7 @@ fun PlantDetails(
                 callbacks = callbacks,
                 transitionState = transitionState
             )
-            PlantHeader(plantScroller.toolbarShown, plant.name, callbacks, transitionState)
+            PlantHeader(plantScroller.toolbarState, plant.name, callbacks, transitionState)
         }
     }
 }
@@ -176,7 +178,7 @@ fun PlantDetails(
 @Composable
 private fun PlantDetailsContent(
     scrollerPosition: ScrollerPosition,
-    toolbarShown: Boolean,
+    toolbarState: ToolbarState,
     plant: Plant,
     isPlanted: Boolean,
     onNamePositioned: (Float) -> Unit,
@@ -186,29 +188,27 @@ private fun PlantDetailsContent(
     VerticalScroller(scrollerPosition) {
         PlantImageHeader(
             scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted,
-            Modifier.visible { !toolbarShown },
+            Modifier.visible { toolbarState == ToolbarState.HIDDEN },
             Modifier.drawLayer(alpha = transitionState[contentAlphaKey])
         )
         PlantInformation(
             name = plant.name,
             wateringInterval = plant.wateringInterval,
             description = plant.description,
-            onNamePositioned = {
-                onNamePositioned(it.globalPosition.y)
-            },
-            toolbarShown = toolbarShown
+            onNamePositioned = { onNamePositioned(it) },
+            toolbarState = toolbarState
         )
     }
 }
 
 @Composable
 private fun PlantHeader(
-    toolbarShown: Boolean,
+    toolbarState: ToolbarState,
     plantName: String,
     callbacks: PlantDetailsCallbacks,
     transitionState: TransitionState
 ) {
-    if (toolbarShown) {
+    if (toolbarState == ToolbarState.SHOWN) {
         PlantDetailsToolbar(
             plantName = plantName,
             onBackClicked = callbacks.onBackClicked,
@@ -243,7 +243,9 @@ private fun PlantDetailsToolbar(
                 text = plantName,
                 style = MaterialTheme.typography.h6,
                 // As title in TopAppBar has extra inset on the left, need to do this: b/158829169
-                modifier = Modifier.weight(1f).fillMaxSize()
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
                     .wrapContentSize(Alignment.Center)
             )
             val shareAccessibilityLabel = stringResource(R.string.menu_item_share_plant)
@@ -328,7 +330,8 @@ private fun PlantHeaderActions(
         modifier = modifier.fillMaxSize().systemBarsPadding(top = true).padding(top = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        val iconModifier = Modifier.sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
+        val iconModifier = Modifier
+            .sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
             .drawBackground(color = MaterialTheme.colors.surface, shape = CircleShape)
 
         IconButton(
@@ -354,8 +357,8 @@ private fun PlantInformation(
     name: String,
     wateringInterval: Int,
     description: String,
-    onNamePositioned: (LayoutCoordinates) -> Unit,
-    toolbarShown: Boolean
+    onNamePositioned: (Float) -> Unit,
+    toolbarState: ToolbarState
 ) {
     Box(modifier = Modifier.padding(24.dp)) {
         Text(
@@ -364,9 +367,8 @@ private fun PlantInformation(
             modifier = Modifier
                 .padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
                 .gravity(Alignment.CenterHorizontally)
-                .onPositioned {
-                    onNamePositioned(it)
-                }.visible { !toolbarShown }
+                .onPositioned { onNamePositioned(it.globalPosition.y) }
+                .visible { toolbarState == ToolbarState.HIDDEN }
         )
         Text(
             text = stringResource(id = R.string.watering_needs_prefix),
@@ -377,7 +379,8 @@ private fun PlantInformation(
         ProvideEmphasis(emphasis = EmphasisAmbient.current.medium) {
             Text(
                 text = getQuantityString(R.plurals.watering_needs_suffix, wateringInterval),
-                modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
+                modifier = Modifier
+                    .padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
                     .gravity(Alignment.CenterHorizontally)
             )
         }
