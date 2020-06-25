@@ -22,8 +22,8 @@ import androidx.ui.test.assertIsDisplayed
 import androidx.ui.test.createComposeRule
 import androidx.ui.test.findByLabel
 import androidx.ui.test.findByText
-import com.google.samples.apps.sunflower.compose.PlantDetails
-import com.google.samples.apps.sunflower.compose.PlantDetailsCallbacks
+import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetails
+import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetailsCallbacks
 import com.google.samples.apps.sunflower.compose.rawUri
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.test.R

@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package com.google.samples.apps.sunflower.compose
+package com.google.samples.apps.sunflower.compose.plantdetail
 
 import android.widget.TextView
-import androidx.animation.FloatPropKey
-import androidx.animation.Spring.StiffnessLow
 import androidx.animation.TransitionState
-import androidx.animation.transitionDefinition
 import androidx.annotation.VisibleForTesting
 import androidx.compose.Composable
 import androidx.compose.getValue
-import androidx.compose.onCommit
 import androidx.compose.setValue
 import androidx.compose.state
 import androidx.core.text.HtmlCompat
@@ -75,20 +71,21 @@ import androidx.ui.res.stringResource
 import androidx.ui.semantics.accessibilityLabel
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
-import androidx.ui.unit.Density
 import androidx.ui.unit.Dp
 import androidx.ui.unit.dp
 import androidx.ui.viewinterop.AndroidView
 import androidx.ui.viewmodel.viewModel
 import com.google.samples.apps.sunflower.R
+import com.google.samples.apps.sunflower.compose.TextSnackbarContainer
+import com.google.samples.apps.sunflower.compose.getQuantityString
+import com.google.samples.apps.sunflower.compose.systemBarsPadding
+import com.google.samples.apps.sunflower.compose.visible
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
 import dev.chrisbanes.accompanist.coil.CoilImageWithCrossfade
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
-private const val ParallaxDelta = 2f
-private const val HeaderTransitionOffset = 150f
 
 /**
  * As these callbacks are passed in through multiple Composables, to avoid having to name
@@ -119,7 +116,7 @@ fun PlantDetailsScreen(
         Surface {
             var showSnackbar by state { false }
 
-            TextSnackbarHolder(
+            TextSnackbarContainer(
                 snackbarText = stringResource(R.string.added_plant_to_garden),
                 showSnackbar = showSnackbar,
                 onDismissSnackbar = { showSnackbar = false }
@@ -150,24 +147,28 @@ fun PlantDetails(
 ) {
     // PlantDetails owns the scrollerPosition to simulate CollapsingToolbarLayout's behavior
     val scrollerPosition = ScrollerPosition()
-    var toolbarState by state { ToolbarState.HIDDEN }
+    var plantScroller by state { PlantDetailsScroller(scrollerPosition, 0f) }
 
     // Transition that fades in/out the header with the image and the Toolbar
     Transition(
         definition = toolbarTransitionDefinition,
-        toState = toolbarState
+        toState = plantScroller.toolbarState
     ) { transitionState ->
         Stack(modifier) {
             PlantDetailsContent(
-                scrollerPosition = scrollerPosition,
-                toolbarShown = toolbarState.toolbarShown,
-                onToolbarShownUpdate = { newState -> toolbarState = newState },
+                scrollerPosition = plantScroller.scrollerPosition,
+                toolbarShown = plantScroller.toolbarShown,
+                onNamePositioned = { newNamePosition ->
+                    if (plantScroller.namePosition == 0f) {
+                        plantScroller = plantScroller.copy(namePosition = newNamePosition)
+                    }
+                },
                 plant = plant,
                 isPlanted = isPlanted,
                 callbacks = callbacks,
                 transitionState = transitionState
             )
-            PlantHeader(toolbarState.toolbarShown, plant.name, callbacks, transitionState)
+            PlantHeader(plantScroller.toolbarShown, plant.name, callbacks, transitionState)
         }
     }
 }
@@ -176,25 +177,13 @@ fun PlantDetails(
 private fun PlantDetailsContent(
     scrollerPosition: ScrollerPosition,
     toolbarShown: Boolean,
-    onToolbarShownUpdate: (ToolbarState) -> Unit,
     plant: Plant,
     isPlanted: Boolean,
+    onNamePositioned: (Float) -> Unit,
     callbacks: PlantDetailsCallbacks,
     transitionState: TransitionState
 ) {
     VerticalScroller(scrollerPosition) {
-        // The header transition happens given the _original_ position of the name on the screen
-        var namePosition by state { Float.MAX_VALUE }
-        // Whenever the name position or the scroller position changes,
-        // check if the toolbar should be shown or not
-        onCommit(namePosition, scrollerPosition.value) {
-            onToolbarShownUpdate(
-                toolbarStateFromBoolean(
-                    scrollerPosition.value > (namePosition + HeaderTransitionOffset)
-                )
-            )
-        }
-
         PlantImageHeader(
             scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted,
             Modifier.visible { !toolbarShown },
@@ -205,9 +194,7 @@ private fun PlantDetailsContent(
             wateringInterval = plant.wateringInterval,
             description = plant.description,
             onNamePositioned = {
-                if (namePosition == Float.MAX_VALUE) {
-                    namePosition = it.globalPosition.y
-                }
+                onNamePositioned(it.globalPosition.y)
             },
             toolbarShown = toolbarShown
         )
@@ -416,43 +403,6 @@ private fun PlantDescription(description: String) {
 private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): Dp {
     return with(DensityAmbient.current) {
         imageHeight.toDp() + scrollerParallaxOffset(scrollerPosition) - (56 / 2).dp
-    }
-}
-
-@Composable
-private fun Density.scrollerParallaxOffset(
-    scrollerPosition: ScrollerPosition
-): Dp = (scrollerPosition.value / ParallaxDelta).toDp()
-
-// Toolbar state related classes and functions to achieve the CollapsingToolbarLayout animation
-private enum class ToolbarState { HIDDEN, SHOWN }
-
-private val ToolbarState.toolbarShown: Boolean
-    get() = this == ToolbarState.SHOWN
-
-private fun toolbarStateFromBoolean(show: Boolean): ToolbarState =
-    if (show) ToolbarState.SHOWN
-    else ToolbarState.HIDDEN
-
-private val toolbarAlphaKey = FloatPropKey()
-private val contentAlphaKey = FloatPropKey()
-
-private val toolbarTransitionDefinition = transitionDefinition {
-    state(ToolbarState.HIDDEN) {
-        this[toolbarAlphaKey] = 0f
-        this[contentAlphaKey] = 1f
-    }
-    state(ToolbarState.SHOWN) {
-        this[toolbarAlphaKey] = 1f
-        this[contentAlphaKey] = 0f
-    }
-    transition {
-        toolbarAlphaKey using physics<Float> {
-            stiffness = StiffnessLow
-        }
-        contentAlphaKey using physics<Float> {
-            stiffness = StiffnessLow
-        }
     }
 }
 

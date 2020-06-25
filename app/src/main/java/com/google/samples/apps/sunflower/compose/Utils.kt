@@ -65,7 +65,7 @@ fun rawUri(@RawRes id: Int): Uri {
  * Simple API to display a Snackbar with text on the screen
  */
 @Composable
-fun TextSnackbarHolder(
+fun TextSnackbarContainer(
     snackbarText: String,
     showSnackbar: Boolean,
     onDismissSnackbar: () -> Unit,
