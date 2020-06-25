@@ -231,8 +231,9 @@ private fun PlantDetailsToolbar(
     onShareClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier.systemBarsPadding(top = true)) {
+    Surface {
         TopAppBar(
+            modifier = modifier.systemBarsPadding(bottom = false),
             backgroundColor = MaterialTheme.colors.surface
         ) {
             IconButton(onBackClicked, Modifier.gravity(Alignment.CenterVertically)) {
