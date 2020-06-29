@@ -23,8 +23,9 @@ import androidx.compose.Composable
 import androidx.ui.foundation.ScrollerPosition
 import androidx.ui.unit.Density
 import androidx.ui.unit.Dp
+import androidx.ui.unit.dp
 
-private const val HeaderTransitionOffset = 150f
+private val HeaderTransitionOffset = 32.dp
 private const val ParallaxFactor = 2f
 
 /**
@@ -32,12 +33,17 @@ private const val ParallaxFactor = 2f
  */
 data class PlantDetailsScroller(
     val scrollerPosition: ScrollerPosition,
-    val namePosition: Float
+    val namePosition: Float,
+    private val density: Density
 ) {
+    private val transitionOffset: Float = with(density) {
+        HeaderTransitionOffset.toPx()
+    }
+
     val toolbarState: ToolbarState
         get() =
             if (namePosition != 0f &&
-                scrollerPosition.value > (namePosition + HeaderTransitionOffset)
+                scrollerPosition.value > (namePosition + transitionOffset)
             ) {
                 ToolbarState.SHOWN
             } else {

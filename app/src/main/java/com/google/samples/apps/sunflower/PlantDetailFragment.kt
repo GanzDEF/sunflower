@@ -56,10 +56,10 @@ class PlantDetailFragment : Fragment() {
                         ProvideInsets {
                             PlantDetailsScreen(
                                 args.plantId,
-                                onBackClicked = {
+                                onBackClick = {
                                     this.findNavController().navigateUp()
                                 },
-                                onShareClicked = {
+                                onShareClick = {
                                     createShareIntent(it)
                                 }
                             )

@@ -93,15 +93,15 @@ import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
  */
 data class PlantDetailsCallbacks(
     val onFabClick: () -> Unit,
-    val onBackClicked: () -> Unit,
-    val onShareClicked: () -> Unit
+    val onBackClick: () -> Unit,
+    val onShareClick: () -> Unit
 )
 
 @Composable
 fun PlantDetailsScreen(
     plantId: String,
-    onBackClicked: () -> Unit,
-    onShareClicked: (String) -> Unit
+    onBackClick: () -> Unit,
+    onShareClick: (String) -> Unit
 ) {
     // ViewModel and LiveDatas needed to populate the plant details info on the screen
     val plantDetailsViewModel: PlantDetailViewModel = viewModel(
@@ -120,13 +120,13 @@ fun PlantDetailsScreen(
             ) {
                 val context = ContextAmbient.current
                 PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
-                    onBackClicked = onBackClicked,
+                    onBackClick = onBackClick,
                     onFabClick = {
                         plantDetailsViewModel.addPlantToGarden()
                     },
-                    onShareClicked = {
+                    onShareClick = {
                         val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
-                        onShareClicked(shareText)
+                        onShareClick(shareText)
                     }
                 ))
             }
@@ -144,7 +144,9 @@ fun PlantDetails(
 ) {
     // PlantDetails owns the scrollerPosition to simulate CollapsingToolbarLayout's behavior
     val scrollerPosition = ScrollerPosition()
-    var plantScroller by state { PlantDetailsScroller(scrollerPosition, Float.MIN_VALUE) }
+    var plantScroller by state {
+        PlantDetailsScroller(scrollerPosition, Float.MIN_VALUE, DensityAmbient.current)
+    }
 
     // Transition that fades in/out the header with the image and the Toolbar
     Transition(
@@ -155,7 +157,7 @@ fun PlantDetails(
             PlantDetailsContent(
                 scrollerPosition = plantScroller.scrollerPosition,
                 toolbarState = plantScroller.toolbarState,
-                onNamePositioned = { newNamePosition ->
+                onNamePosition = { newNamePosition ->
                     // Comparing to Float.MIN_VALUE as we are just interested on the original
                     // position of name on the screen
                     if (plantScroller.namePosition == Float.MIN_VALUE) {
@@ -178,7 +180,7 @@ private fun PlantDetailsContent(
     toolbarState: ToolbarState,
     plant: Plant,
     isPlanted: Boolean,
-    onNamePositioned: (Float) -> Unit,
+    onNamePosition: (Float) -> Unit,
     callbacks: PlantDetailsCallbacks,
     transitionState: TransitionState
 ) {
@@ -192,7 +194,7 @@ private fun PlantDetailsContent(
             name = plant.name,
             wateringInterval = plant.wateringInterval,
             description = plant.description,
-            onNamePositioned = { onNamePositioned(it) },
+            onNamePosition = { onNamePosition(it) },
             toolbarState = toolbarState
         )
     }
@@ -208,14 +210,14 @@ private fun PlantHeader(
     if (toolbarState == ToolbarState.SHOWN) {
         PlantDetailsToolbar(
             plantName = plantName,
-            onBackClicked = callbacks.onBackClicked,
-            onShareClicked = callbacks.onShareClicked,
+            onBackClick = callbacks.onBackClick,
+            onShareClick = callbacks.onShareClick,
             modifier = Modifier.drawOpacity(transitionState[toolbarAlphaKey])
         )
     } else {
         PlantHeaderActions(
-            onBackClicked = callbacks.onBackClicked,
-            onShareClicked = callbacks.onShareClicked,
+            onBackClick = callbacks.onBackClick,
+            onShareClick = callbacks.onShareClick,
             modifier = Modifier.drawOpacity(transitionState[contentAlphaKey])
         )
     }
@@ -224,8 +226,8 @@ private fun PlantHeader(
 @Composable
 private fun PlantDetailsToolbar(
     plantName: String,
-    onBackClicked: () -> Unit,
-    onShareClicked: () -> Unit,
+    onBackClick: () -> Unit,
+    onShareClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface {
@@ -233,7 +235,7 @@ private fun PlantDetailsToolbar(
             modifier = modifier.systemBarsPadding(bottom = false),
             backgroundColor = MaterialTheme.colors.surface
         ) {
-            IconButton(onBackClicked, Modifier.gravity(Alignment.CenterVertically)) {
+            IconButton(onBackClick, Modifier.gravity(Alignment.CenterVertically)) {
                 Icon(Icons.Filled.ArrowBack)
             }
             Text(
@@ -247,7 +249,7 @@ private fun PlantDetailsToolbar(
             )
             val shareAccessibilityLabel = stringResource(R.string.menu_item_share_plant)
             IconButton(
-                onShareClicked,
+                onShareClick,
                 Modifier.gravity(Alignment.CenterVertically).semantics {
                     accessibilityLabel = shareAccessibilityLabel
                 }
@@ -322,8 +324,8 @@ private fun PlantImage(
 
 @Composable
 private fun PlantHeaderActions(
-    onBackClicked: () -> Unit,
-    onShareClicked: () -> Unit,
+    onBackClick: () -> Unit,
+    onShareClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -338,14 +340,14 @@ private fun PlantHeaderActions(
             .drawBackground(color = MaterialTheme.colors.surface, shape = CircleShape)
 
         IconButton(
-            onClick = onBackClicked,
+            onClick = onBackClick,
             modifier = Modifier.padding(start = 12.dp).plus(iconModifier)
         ) {
             Icon(Icons.Filled.ArrowBack)
         }
         val shareAccessibilityLabel = stringResource(R.string.menu_item_share_plant)
         IconButton(
-            onClick = onShareClicked,
+            onClick = onShareClick,
             modifier = Modifier.padding(end = 12.dp).plus(iconModifier).semantics {
                 accessibilityLabel = shareAccessibilityLabel
             }
@@ -360,7 +362,7 @@ private fun PlantInformation(
     name: String,
     wateringInterval: Int,
     description: String,
-    onNamePositioned: (Float) -> Unit,
+    onNamePosition: (Float) -> Unit,
     toolbarState: ToolbarState
 ) {
     Box(modifier = Modifier.padding(24.dp)) {
@@ -370,7 +372,7 @@ private fun PlantInformation(
             modifier = Modifier
                 .padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
                 .gravity(Alignment.CenterHorizontally)
-                .onPositioned { onNamePositioned(it.globalPosition.y) }
+                .onPositioned { onNamePosition(it.globalPosition.y) }
                 .visible { toolbarState == ToolbarState.HIDDEN }
         )
         Text(
