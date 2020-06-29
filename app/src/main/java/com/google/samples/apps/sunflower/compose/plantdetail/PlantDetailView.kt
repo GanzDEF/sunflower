@@ -20,6 +20,7 @@ import android.widget.TextView
 import androidx.animation.TransitionState
 import androidx.annotation.VisibleForTesting
 import androidx.compose.Composable
+import androidx.compose.StructurallyEqual
 import androidx.compose.getValue
 import androidx.compose.setValue
 import androidx.compose.state
@@ -29,7 +30,6 @@ import androidx.ui.core.Alignment
 import androidx.ui.core.ContentScale
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.DensityAmbient
-import androidx.ui.core.LayoutCoordinates
 import androidx.ui.core.Modifier
 import androidx.ui.core.drawLayer
 import androidx.ui.core.drawOpacity
@@ -76,9 +76,9 @@ import androidx.ui.unit.dp
 import androidx.ui.viewinterop.AndroidView
 import androidx.ui.viewmodel.viewModel
 import com.google.samples.apps.sunflower.R
-import com.google.samples.apps.sunflower.compose.TextSnackbarContainer
-import com.google.samples.apps.sunflower.compose.getQuantityString
+import com.google.samples.apps.sunflower.compose.utils.getQuantityString
 import com.google.samples.apps.sunflower.compose.systemBarsPadding
+import com.google.samples.apps.sunflower.compose.utils.TextSnackbarContainer
 import com.google.samples.apps.sunflower.compose.visible
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
@@ -92,7 +92,7 @@ import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
  * parameters to not mix them up, they're aggregated in this class.
  */
 data class PlantDetailsCallbacks(
-    val onFabClicked: () -> Unit,
+    val onFabClick: () -> Unit,
     val onBackClicked: () -> Unit,
     val onShareClicked: () -> Unit
 )
@@ -109,23 +109,20 @@ fun PlantDetailsScreen(
     )
     val plant = plantDetailsViewModel.plant.observeAsState().value
     val isPlanted = plantDetailsViewModel.isPlanted.observeAsState().value
+    val showSnackbar = plantDetailsViewModel.showSnackbar.observeAsState().value
 
-    // Every time there's a new value for plant or isPlanted LiveData, this block will get executed
-    if (plant != null && isPlanted != null) {
+    if (plant != null && isPlanted != null && showSnackbar != null) {
         Surface {
-            var showSnackbar by state { false }
-
             TextSnackbarContainer(
                 snackbarText = stringResource(R.string.added_plant_to_garden),
                 showSnackbar = showSnackbar,
-                onDismissSnackbar = { showSnackbar = false }
+                onDismissSnackbar = { plantDetailsViewModel.dismissSnackbar() }
             ) {
                 val context = ContextAmbient.current
                 PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
                     onBackClicked = onBackClicked,
-                    onFabClicked = {
+                    onFabClick = {
                         plantDetailsViewModel.addPlantToGarden()
-                        showSnackbar = true
                     },
                     onShareClicked = {
                         val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
@@ -187,7 +184,7 @@ private fun PlantDetailsContent(
 ) {
     VerticalScroller(scrollerPosition) {
         PlantImageHeader(
-            scrollerPosition, plant.imageUrl, callbacks.onFabClicked, isPlanted,
+            scrollerPosition, plant.imageUrl, callbacks.onFabClick, isPlanted,
             Modifier.visible { toolbarState == ToolbarState.HIDDEN },
             Modifier.drawLayer(alpha = transitionState[contentAlphaKey])
         )
@@ -265,12 +262,12 @@ private fun PlantDetailsToolbar(
 private fun PlantImageHeader(
     scrollerPosition: ScrollerPosition,
     imageUrl: String,
-    onFabClicked: () -> Unit,
+    onFabClick: () -> Unit,
     isPlanted: Boolean,
     modifier: Modifier = Modifier,
     transitionModifier: Modifier = Modifier
 ) {
-    var imageHeight by state { 0 }
+    var imageHeight by state(StructurallyEqual) { 0 }
 
     Stack(modifier.fillMaxWidth()) {
         PlantImage(scrollerPosition, imageUrl, transitionModifier.onPositioned {
@@ -284,11 +281,11 @@ private fun PlantImageHeader(
                     .offset(y = getFabOffset(imageHeight, scrollerPosition))
                     .plus(transitionModifier)
             } else {
-                Modifier
+                Modifier.visible { false }
             }
             val fabAccessibilityLabel = stringResource(R.string.add_plant)
             FloatingActionButton(
-                onClick = onFabClicked,
+                onClick = onFabClick,
                 shape = MaterialTheme.shapes.small,
                 modifier = fabModifier.semantics {
                     accessibilityLabel = fabAccessibilityLabel
@@ -308,7 +305,7 @@ private fun PlantImage(
     placeholderColor: Color = MaterialTheme.colors.onSurface.copy(0.2f)
 ) {
     val parallaxOffset = with(DensityAmbient.current) {
-        scrollerParallaxOffset(scrollerPosition)
+        scrollerParallaxOffset(this, scrollerPosition)
     }
     CoilImageWithCrossfade(
         data = imageUrl,
@@ -316,7 +313,10 @@ private fun PlantImage(
         loading = {
             Box(modifier = Modifier.fillMaxSize(), backgroundColor = placeholderColor)
         },
-        modifier = modifier.fillMaxWidth().padding(top = parallaxOffset).preferredHeight(278.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = parallaxOffset)
+            .preferredHeight(278.dp)
     )
 }
 
@@ -327,7 +327,10 @@ private fun PlantHeaderActions(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.fillMaxSize().systemBarsPadding(top = true).padding(top = 12.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .systemBarsPadding(top = true)
+            .padding(top = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val iconModifier = Modifier
@@ -406,7 +409,7 @@ private fun PlantDescription(description: String) {
 @Composable
 private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): Dp {
     return with(DensityAmbient.current) {
-        imageHeight.toDp() + scrollerParallaxOffset(scrollerPosition) - (56 / 2).dp
+        imageHeight.toDp() + scrollerParallaxOffset(this, scrollerPosition) - (56 / 2).dp
     }
 }
 

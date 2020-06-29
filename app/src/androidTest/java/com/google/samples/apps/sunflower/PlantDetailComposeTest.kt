@@ -16,15 +16,19 @@
 
 package com.google.samples.apps.sunflower
 
+import android.content.ContentResolver
+import android.net.Uri
+import androidx.annotation.RawRes
 import androidx.compose.Composable
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.ui.core.ContextAmbient
 import androidx.ui.test.assertIsDisplayed
 import androidx.ui.test.createComposeRule
 import androidx.ui.test.findByLabel
 import androidx.ui.test.findByText
 import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetails
 import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetailsCallbacks
-import com.google.samples.apps.sunflower.compose.rawUri
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.test.R
 import org.junit.Rule
@@ -76,4 +80,13 @@ private fun plantForTesting(): Plant {
         wateringInterval = 30,
         imageUrl = rawUri(R.raw.apple).toString()
     )
+}
+
+/**
+ * Returns the Uri of a given raw resource
+ */
+@Composable
+private fun rawUri(@RawRes id: Int): Uri {
+    return "${ContentResolver.SCHEME_ANDROID_RESOURCE}://${ContextAmbient.current.packageName}/$id"
+        .toUri()
 }

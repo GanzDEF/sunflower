@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.samples.apps.sunflower.compose
+package com.google.samples.apps.sunflower.compose.utils
 
-import android.content.ContentResolver
-import android.net.Uri
-import androidx.annotation.PluralsRes
-import androidx.annotation.RawRes
 import androidx.compose.Composable
 import androidx.compose.launchInComposition
-import androidx.core.net.toUri
 import androidx.ui.core.Alignment
-import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.Text
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
@@ -32,34 +26,9 @@ import androidx.ui.layout.Stack
 import androidx.ui.layout.padding
 import androidx.ui.material.Snackbar
 import androidx.ui.unit.dp
+import com.google.samples.apps.sunflower.compose.systemBarsPadding
 import kotlinx.coroutines.delay
 
-/**
- * Load a string with grammatically correct pluralization for the given quantity,
- * using the given arguments.
- *
- * TODO: Remove when b/158065051 is fixed
- *
- * @param id the resource identifier
- * @param quantity The number used to get the correct string for the current language's
- *           plural rules.
- *
- * @return the string data associated with the resource
- */
-@Composable
-fun getQuantityString(@PluralsRes id: Int, quantity: Int): String {
-    val context = ContextAmbient.current
-    return context.resources.getQuantityString(id, quantity, quantity)
-}
-
-/**
- * Returns the Uri of a given raw resource
- */
-@Composable
-fun rawUri(@RawRes id: Int): Uri {
-    return "${ContentResolver.SCHEME_ANDROID_RESOURCE}://${ContextAmbient.current.packageName}/$id"
-        .toUri()
-}
 
 /**
  * Simple API to display a Snackbar with text on the screen
@@ -70,13 +39,14 @@ fun TextSnackbarContainer(
     showSnackbar: Boolean,
     onDismissSnackbar: () -> Unit,
     modifier: Modifier = Modifier,
+    dismissTimeout: Long = 5000,
     content: @Composable () -> Unit
 ) {
     Stack(modifier) {
         content()
         if (showSnackbar) {
             launchInComposition(showSnackbar) {
-                delay(5000)
+                delay(dismissTimeout)
                 onDismissSnackbar()
             }
 

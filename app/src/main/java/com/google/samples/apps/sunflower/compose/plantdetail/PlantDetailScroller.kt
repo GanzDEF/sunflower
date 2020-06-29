@@ -71,6 +71,7 @@ val toolbarTransitionDefinition = transitionDefinition {
 }
 
 @Composable
-fun Density.scrollerParallaxOffset(
-    scrollerPosition: ScrollerPosition
-): Dp = (scrollerPosition.value / ParallaxFactor).toDp()
+fun scrollerParallaxOffset(density: Density, scrollerPosition: ScrollerPosition): Dp =
+    with(density) {
+        (scrollerPosition.value / ParallaxFactor).toDp()
+    }
