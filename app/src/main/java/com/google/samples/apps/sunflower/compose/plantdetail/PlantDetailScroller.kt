@@ -33,22 +33,21 @@ private const val ParallaxFactor = 2f
  */
 data class PlantDetailsScroller(
     val scrollerPosition: ScrollerPosition,
-    val namePosition: Float,
-    private val density: Density
+    val namePosition: Float
 ) {
-    private val transitionOffset: Float = with(density) {
-        HeaderTransitionOffset.toPx()
+    fun getToolbarState(density: Density): ToolbarState {
+        return if (namePosition != 0f &&
+            scrollerPosition.value > (namePosition + getTransitionOffset(density))
+        ) {
+            ToolbarState.SHOWN
+        } else {
+            ToolbarState.HIDDEN
+        }
     }
 
-    val toolbarState: ToolbarState
-        get() =
-            if (namePosition != 0f &&
-                scrollerPosition.value > (namePosition + transitionOffset)
-            ) {
-                ToolbarState.SHOWN
-            } else {
-                ToolbarState.HIDDEN
-            }
+    private fun getTransitionOffset(density: Density): Float = with(density) {
+        HeaderTransitionOffset.toPx()
+    }
 }
 
 // Toolbar state related classes and functions to achieve the CollapsingToolbarLayout animation

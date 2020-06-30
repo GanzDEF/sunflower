@@ -76,6 +76,7 @@ import androidx.ui.unit.dp
 import androidx.ui.viewinterop.AndroidView
 import androidx.ui.viewmodel.viewModel
 import com.google.samples.apps.sunflower.R
+import com.google.samples.apps.sunflower.compose.Dimens
 import com.google.samples.apps.sunflower.compose.utils.getQuantityString
 import com.google.samples.apps.sunflower.compose.systemBarsPadding
 import com.google.samples.apps.sunflower.compose.utils.TextSnackbarContainer
@@ -145,18 +146,19 @@ fun PlantDetails(
     // PlantDetails owns the scrollerPosition to simulate CollapsingToolbarLayout's behavior
     val scrollerPosition = ScrollerPosition()
     var plantScroller by state {
-        PlantDetailsScroller(scrollerPosition, Float.MIN_VALUE, DensityAmbient.current)
+        PlantDetailsScroller(scrollerPosition, Float.MIN_VALUE)
     }
+    val toolbarState = plantScroller.getToolbarState(DensityAmbient.current)
 
     // Transition that fades in/out the header with the image and the Toolbar
     Transition(
         definition = toolbarTransitionDefinition,
-        toState = plantScroller.toolbarState
+        toState = toolbarState
     ) { transitionState ->
         Stack(modifier) {
             PlantDetailsContent(
                 scrollerPosition = plantScroller.scrollerPosition,
-                toolbarState = plantScroller.toolbarState,
+                toolbarState = toolbarState,
                 onNamePosition = { newNamePosition ->
                     // Comparing to Float.MIN_VALUE as we are just interested on the original
                     // position of name on the screen
@@ -169,7 +171,7 @@ fun PlantDetails(
                 callbacks = callbacks,
                 transitionState = transitionState
             )
-            PlantHeader(plantScroller.toolbarState, plant.name, callbacks, transitionState)
+            PlantHeader(toolbarState, plant.name, callbacks, transitionState)
         }
     }
 }
@@ -279,7 +281,7 @@ private fun PlantImageHeader(
             val fabModifier = if (imageHeight != 0) {
                 Modifier
                     .gravity(Alignment.TopEnd)
-                    .padding(end = 8.dp)
+                    .padding(end = Dimens.PaddingSmall)
                     .offset(y = getFabOffset(imageHeight, scrollerPosition))
                     .plus(transitionModifier)
             } else {
@@ -318,7 +320,7 @@ private fun PlantImage(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = parallaxOffset)
-            .preferredHeight(278.dp)
+            .preferredHeight(Dimens.PlantDetailAppBarHeight)
     )
 }
 
@@ -332,25 +334,28 @@ private fun PlantHeaderActions(
         modifier = modifier
             .fillMaxSize()
             .systemBarsPadding(top = true)
-            .padding(top = 12.dp),
+            .padding(top = Dimens.ToolbarIconPadding),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val iconModifier = Modifier
-            .sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
+            .sizeIn(maxWidth = Dimens.ToolbarIconSize, maxHeight = Dimens.ToolbarIconSize)
             .drawBackground(color = MaterialTheme.colors.surface, shape = CircleShape)
 
         IconButton(
             onClick = onBackClick,
-            modifier = Modifier.padding(start = 12.dp).plus(iconModifier)
+            modifier = Modifier.padding(start = Dimens.ToolbarIconPadding).plus(iconModifier)
         ) {
             Icon(Icons.Filled.ArrowBack)
         }
         val shareAccessibilityLabel = stringResource(R.string.menu_item_share_plant)
         IconButton(
             onClick = onShareClick,
-            modifier = Modifier.padding(end = 12.dp).plus(iconModifier).semantics {
-                accessibilityLabel = shareAccessibilityLabel
-            }
+            modifier = Modifier
+                .padding(end = Dimens.ToolbarIconPadding)
+                .plus(iconModifier)
+                .semantics {
+                    accessibilityLabel = shareAccessibilityLabel
+                }
         ) {
             Icon(Icons.Filled.Share)
         }
@@ -365,12 +370,16 @@ private fun PlantInformation(
     onNamePosition: (Float) -> Unit,
     toolbarState: ToolbarState
 ) {
-    Box(modifier = Modifier.padding(24.dp)) {
+    Box(modifier = Modifier.padding(Dimens.PaddingLarge)) {
         Text(
             text = name,
             style = MaterialTheme.typography.h5,
             modifier = Modifier
-                .padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
+                .padding(
+                    start = Dimens.PaddingSmall,
+                    end = Dimens.PaddingSmall,
+                    bottom = Dimens.PaddingNormal
+                )
                 .gravity(Alignment.CenterHorizontally)
                 .onPositioned { onNamePosition(it.globalPosition.y) }
                 .visible { toolbarState == ToolbarState.HIDDEN }
@@ -379,13 +388,19 @@ private fun PlantInformation(
             text = stringResource(id = R.string.watering_needs_prefix),
             color = MaterialTheme.colors.primaryVariant,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 8.dp).gravity(Alignment.CenterHorizontally)
+            modifier = Modifier
+                .padding(horizontal = Dimens.PaddingSmall)
+                .gravity(Alignment.CenterHorizontally)
         )
         ProvideEmphasis(emphasis = EmphasisAmbient.current.medium) {
             Text(
                 text = getQuantityString(R.plurals.watering_needs_suffix, wateringInterval),
                 modifier = Modifier
-                    .padding(start = 8.dp, end = 8.dp, bottom = 16.dp)
+                    .padding(
+                        start = Dimens.PaddingSmall,
+                        end = Dimens.PaddingSmall,
+                        bottom = Dimens.PaddingNormal
+                    )
                     .gravity(Alignment.CenterHorizontally)
             )
         }
