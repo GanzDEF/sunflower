@@ -45,6 +45,7 @@ import androidx.ui.foundation.drawBackground
 import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.graphics.Color
 import androidx.ui.layout.Arrangement
+import androidx.ui.layout.Column
 import androidx.ui.layout.ColumnScope.gravity
 import androidx.ui.layout.Row
 import androidx.ui.layout.Stack
@@ -370,7 +371,7 @@ private fun PlantInformation(
     onNamePosition: (Float) -> Unit,
     toolbarState: ToolbarState
 ) {
-    Box(modifier = Modifier.padding(Dimens.PaddingLarge)) {
+    Column(modifier = Modifier.padding(Dimens.PaddingLarge)) {
         Text(
             text = name,
             style = MaterialTheme.typography.h5,

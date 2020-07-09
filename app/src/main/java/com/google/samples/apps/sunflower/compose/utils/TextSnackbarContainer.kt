@@ -39,14 +39,14 @@ fun TextSnackbarContainer(
     showSnackbar: Boolean,
     onDismissSnackbar: () -> Unit,
     modifier: Modifier = Modifier,
-    dismissTimeout: Long = 5000,
+    dismissTimeoutMs: Long = 5000,
     content: @Composable () -> Unit
 ) {
     Stack(modifier) {
         content()
         if (showSnackbar) {
             launchInComposition(showSnackbar) {
-                delay(dismissTimeout)
+                delay(dismissTimeoutMs)
                 onDismissSnackbar()
             }
 

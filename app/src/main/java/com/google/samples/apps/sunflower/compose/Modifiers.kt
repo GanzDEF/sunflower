@@ -25,7 +25,8 @@ import androidx.ui.core.Modifier
 
 /**
  * Hides an element on the screen leaving its space occupied.
- * This should be replaced with the real visible modifier in the future: b/158837937
+ * This should be replaced with the real visible modifier in the future:
+ * https://issuetracker.google.com/issues/158837937
  *
  * isVisible is of type () -> Boolean because if the calling composable doesn't own the
  * state boolean of that Boolean, a read (recompose) will be avoided.

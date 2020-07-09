@@ -24,7 +24,7 @@ import androidx.ui.core.ContextAmbient
  * Load a string with grammatically correct pluralization for the given quantity,
  * using the given arguments.
  *
- * TODO: Remove when b/158065051 is fixed
+ * TODO: Remove when https://issuetracker.google.com/issues/158065051 is fixed
  *
  * @param id the resource identifier
  * @param quantity The number used to get the correct string for the current language's

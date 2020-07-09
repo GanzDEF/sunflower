@@ -44,26 +44,33 @@ class PlantDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(
-            R.layout.fragment_plant_detail, container, false
-        ).apply {
+        return FrameLayout(requireContext()).apply {
+
+            // In order for savedState to work, the same ID needs to be used for all instances.
+            id = R.id.plant_detail_fragment
+
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+
             systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
 
-            findViewById<FrameLayout>(R.id.compose_frame)!!.apply {
-                setContent(Recomposer.current()) {
-                    MaterialThemeFromMdcTheme(context = requireContext()) {
-                        ProvideInsets {
-                            PlantDetailsScreen(
-                                args.plantId,
-                                onBackClick = {
-                                    this.findNavController().navigateUp()
-                                },
-                                onShareClick = {
-                                    createShareIntent(it)
-                                }
-                            )
-                        }
+            setContent(Recomposer.current()) {
+                // Create a Compose MaterialTheme inheriting the existing colors, typography
+                // and shapes of the current View system's theme
+                MaterialThemeFromMdcTheme(context = requireContext()) {
+                    ProvideInsets {
+                        PlantDetailsScreen(
+                            args.plantId,
+                            onBackClick = {
+                                this.findNavController().navigateUp()
+                            },
+                            onShareClick = { textToShare ->
+                                createShareIntent(textToShare)
+                            }
+                        )
                     }
                 }
             }
