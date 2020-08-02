@@ -21,15 +21,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import androidx.compose.Recomposer
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.ui.core.setContent
+import com.google.samples.apps.sunflower.compose.ProvideDisplayInsets
 import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetailsScreen
-import com.google.samples.apps.sunflower.compose.ProvideInsets
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
 /**
@@ -43,35 +41,26 @@ class PlantDetailFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return FrameLayout(requireContext()).apply {
+    ) = ComposeView(requireContext()).apply {
 
-            // In order for savedState to work, the same ID needs to be used for all instances.
-            id = R.id.plant_detail_fragment
+        // Displaying edge-to-edge
+        systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
 
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-
-            systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-
-            setContent(Recomposer.current()) {
-                // Create a Compose MaterialTheme inheriting the existing colors, typography
-                // and shapes of the current View system's theme
-                MaterialThemeFromMdcTheme(context = requireContext()) {
-                    ProvideInsets {
-                        PlantDetailsScreen(
-                            args.plantId,
-                            onBackClick = {
-                                this.findNavController().navigateUp()
-                            },
-                            onShareClick = { textToShare ->
-                                createShareIntent(textToShare)
-                            }
-                        )
-                    }
+        setContent {
+            // Create a Compose MaterialTheme inheriting the existing colors, typography
+            // and shapes of the current View system's theme
+            MaterialThemeFromMdcTheme {
+                ProvideDisplayInsets {
+                    PlantDetailsScreen(
+                        args.plantId,
+                        onBackClick = {
+                            this.findNavController().navigateUp()
+                        },
+                        onShareClick = { textToShare ->
+                            createShareIntent(textToShare)
+                        }
+                    )
                 }
             }
         }

@@ -16,78 +16,78 @@
 
 package com.google.samples.apps.sunflower.compose.plantdetail
 
-import android.widget.TextView
-import androidx.animation.TransitionState
+import android.text.method.LinkMovementMethod
 import androidx.annotation.VisibleForTesting
-import androidx.compose.Composable
-import androidx.compose.StructurallyEqual
-import androidx.compose.getValue
-import androidx.compose.setValue
-import androidx.compose.state
+import androidx.compose.animation.core.TransitionState
+import androidx.compose.animation.transition
+import androidx.compose.foundation.Box
+import androidx.compose.foundation.Icon
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.ScrollableColumn
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Stack
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.preferredHeight
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.EmphasisAmbient
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ProvideEmphasis
+import androidx.compose.material.Surface
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.state
+import androidx.compose.runtime.structuralEqualityPolicy
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawOpacity
+import androidx.compose.ui.drawLayer
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.globalPosition
+import androidx.compose.ui.onPositioned
+import androidx.compose.ui.platform.ContextAmbient
+import androidx.compose.ui.platform.DensityAmbient
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.accessibilityLabel
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidViewBinding
+import androidx.compose.ui.viewinterop.viewModel
 import androidx.core.text.HtmlCompat
-import androidx.ui.animation.Transition
-import androidx.ui.core.Alignment
-import androidx.ui.core.ContentScale
-import androidx.ui.core.ContextAmbient
-import androidx.ui.core.DensityAmbient
-import androidx.ui.core.Modifier
-import androidx.ui.core.drawLayer
-import androidx.ui.core.drawOpacity
-import androidx.ui.core.globalPosition
-import androidx.ui.core.onPositioned
-import androidx.ui.core.semantics.semantics
-import androidx.ui.foundation.Box
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.ScrollerPosition
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.VerticalScroller
-import androidx.ui.foundation.drawBackground
-import androidx.ui.foundation.shape.corner.CircleShape
-import androidx.ui.graphics.Color
-import androidx.ui.layout.Arrangement
-import androidx.ui.layout.Column
-import androidx.ui.layout.ColumnScope.gravity
-import androidx.ui.layout.Row
-import androidx.ui.layout.Stack
-import androidx.ui.layout.fillMaxSize
-import androidx.ui.layout.fillMaxWidth
-import androidx.ui.layout.offset
-import androidx.ui.layout.padding
-import androidx.ui.layout.preferredHeight
-import androidx.ui.layout.sizeIn
-import androidx.ui.layout.wrapContentSize
-import androidx.ui.livedata.observeAsState
-import androidx.ui.material.EmphasisAmbient
-import androidx.ui.material.FloatingActionButton
-import androidx.ui.material.IconButton
-import androidx.ui.material.MaterialTheme
-import androidx.ui.material.ProvideEmphasis
-import androidx.ui.material.Surface
-import androidx.ui.material.TopAppBar
-import androidx.ui.material.icons.Icons
-import androidx.ui.material.icons.filled.Add
-import androidx.ui.material.icons.filled.ArrowBack
-import androidx.ui.material.icons.filled.Share
-import androidx.ui.res.stringResource
-import androidx.ui.semantics.accessibilityLabel
-import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
-import androidx.ui.unit.Dp
-import androidx.ui.unit.dp
-import androidx.ui.viewinterop.AndroidView
-import androidx.ui.viewmodel.viewModel
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.compose.Dimens
-import com.google.samples.apps.sunflower.compose.utils.getQuantityString
 import com.google.samples.apps.sunflower.compose.systemBarsPadding
 import com.google.samples.apps.sunflower.compose.utils.TextSnackbarContainer
+import com.google.samples.apps.sunflower.compose.utils.getQuantityString
 import com.google.samples.apps.sunflower.compose.visible
 import com.google.samples.apps.sunflower.data.Plant
+import com.google.samples.apps.sunflower.databinding.ItemPlantDescriptionBinding
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
 import dev.chrisbanes.accompanist.coil.CoilImageWithCrossfade
 import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
-
 
 /**
  * As these callbacks are passed in through multiple Composables, to avoid having to name
@@ -121,16 +121,19 @@ fun PlantDetailsScreen(
                 onDismissSnackbar = { plantDetailsViewModel.dismissSnackbar() }
             ) {
                 val context = ContextAmbient.current
-                PlantDetails(plant, isPlanted, PlantDetailsCallbacks(
-                    onBackClick = onBackClick,
-                    onFabClick = {
-                        plantDetailsViewModel.addPlantToGarden()
-                    },
-                    onShareClick = {
-                        val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
-                        onShareClick(shareText)
-                    }
-                ))
+                PlantDetails(
+                    plant, isPlanted,
+                    PlantDetailsCallbacks(
+                        onBackClick = onBackClick,
+                        onFabClick = {
+                            plantDetailsViewModel.addPlantToGarden()
+                        },
+                        onShareClick = {
+                            val shareText = context.resources.getString(R.string.share_text_plant, plant.name)
+                            onShareClick(shareText)
+                        }
+                    )
+                )
             }
         }
     }
@@ -145,41 +148,37 @@ fun PlantDetails(
     modifier: Modifier = Modifier
 ) {
     // PlantDetails owns the scrollerPosition to simulate CollapsingToolbarLayout's behavior
-    val scrollerPosition = ScrollerPosition()
+    val scrollState = rememberScrollState()
     var plantScroller by state {
-        PlantDetailsScroller(scrollerPosition, Float.MIN_VALUE)
+        PlantDetailsScroller(scrollState, Float.MIN_VALUE)
     }
     val toolbarState = plantScroller.getToolbarState(DensityAmbient.current)
 
     // Transition that fades in/out the header with the image and the Toolbar
-    Transition(
-        definition = toolbarTransitionDefinition,
-        toState = toolbarState
-    ) { transitionState ->
-        Stack(modifier) {
-            PlantDetailsContent(
-                scrollerPosition = plantScroller.scrollerPosition,
-                toolbarState = toolbarState,
-                onNamePosition = { newNamePosition ->
-                    // Comparing to Float.MIN_VALUE as we are just interested on the original
-                    // position of name on the screen
-                    if (plantScroller.namePosition == Float.MIN_VALUE) {
-                        plantScroller = plantScroller.copy(namePosition = newNamePosition)
-                    }
-                },
-                plant = plant,
-                isPlanted = isPlanted,
-                callbacks = callbacks,
-                transitionState = transitionState
-            )
-            PlantHeader(toolbarState, plant.name, callbacks, transitionState)
-        }
+    val transition = transition(toolbarTransitionDefinition, toolbarState)
+    Stack(modifier) {
+        PlantDetailsContent(
+            scrollState = scrollState,
+            toolbarState = toolbarState,
+            onNamePosition = { newNamePosition ->
+                // Comparing to Float.MIN_VALUE as we are just interested on the original
+                // position of name on the screen
+                if (plantScroller.namePosition == Float.MIN_VALUE) {
+                    plantScroller = plantScroller.copy(namePosition = newNamePosition)
+                }
+            },
+            plant = plant,
+            isPlanted = isPlanted,
+            callbacks = callbacks,
+            transitionState = transition
+        )
+        PlantHeader(toolbarState, plant.name, callbacks, transition)
     }
 }
 
 @Composable
 private fun PlantDetailsContent(
-    scrollerPosition: ScrollerPosition,
+    scrollState: ScrollState,
     toolbarState: ToolbarState,
     plant: Plant,
     isPlanted: Boolean,
@@ -187,10 +186,9 @@ private fun PlantDetailsContent(
     callbacks: PlantDetailsCallbacks,
     transitionState: TransitionState
 ) {
-    VerticalScroller(scrollerPosition) {
+    ScrollableColumn(scrollState = scrollState) {
         PlantImageHeader(
-            scrollerPosition, plant.imageUrl, callbacks.onFabClick, isPlanted,
-            Modifier.visible { toolbarState == ToolbarState.HIDDEN },
+            scrollState, plant.imageUrl, callbacks.onFabClick, isPlanted,
             Modifier.drawLayer(alpha = transitionState[contentAlphaKey])
         )
         PlantInformation(
@@ -235,7 +233,7 @@ private fun PlantDetailsToolbar(
 ) {
     Surface {
         TopAppBar(
-            modifier = modifier.systemBarsPadding(bottom = false),
+            modifier = modifier.systemBarsPadding(),
             backgroundColor = MaterialTheme.colors.surface
         ) {
             IconButton(onBackClick, Modifier.gravity(Alignment.CenterVertically)) {
@@ -265,26 +263,28 @@ private fun PlantDetailsToolbar(
 
 @Composable
 private fun PlantImageHeader(
-    scrollerPosition: ScrollerPosition,
+    scrollState: ScrollState,
     imageUrl: String,
     onFabClick: () -> Unit,
     isPlanted: Boolean,
-    modifier: Modifier = Modifier,
     transitionModifier: Modifier = Modifier
 ) {
-    var imageHeight by state(StructurallyEqual) { 0 }
+    var imageHeight by state(structuralEqualityPolicy()) { 0 }
 
-    Stack(modifier.fillMaxWidth()) {
-        PlantImage(scrollerPosition, imageUrl, transitionModifier.onPositioned {
-            imageHeight = it.size.height
-        })
+    Stack(Modifier.fillMaxWidth()) {
+        PlantImage(
+            scrollState, imageUrl,
+            transitionModifier.onPositioned {
+                imageHeight = it.size.height
+            }
+        )
         if (!isPlanted) {
             val fabModifier = if (imageHeight != 0) {
                 Modifier
                     .gravity(Alignment.TopEnd)
                     .padding(end = Dimens.PaddingSmall)
-                    .offset(y = getFabOffset(imageHeight, scrollerPosition))
-                    .plus(transitionModifier)
+                    .offset(y = getFabOffset(imageHeight, scrollState))
+                    .then(transitionModifier)
             } else {
                 Modifier.visible { false }
             }
@@ -304,13 +304,13 @@ private fun PlantImageHeader(
 
 @Composable
 private fun PlantImage(
-    scrollerPosition: ScrollerPosition,
+    scrollState: ScrollState,
     imageUrl: String,
     modifier: Modifier = Modifier,
     placeholderColor: Color = MaterialTheme.colors.onSurface.copy(0.2f)
 ) {
     val parallaxOffset = with(DensityAmbient.current) {
-        scrollerParallaxOffset(this, scrollerPosition)
+        scrollerParallaxOffset(this, scrollState)
     }
     CoilImageWithCrossfade(
         data = imageUrl,
@@ -334,17 +334,17 @@ private fun PlantHeaderActions(
     Row(
         modifier = modifier
             .fillMaxSize()
-            .systemBarsPadding(top = true)
+            .systemBarsPadding()
             .padding(top = Dimens.ToolbarIconPadding),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val iconModifier = Modifier
             .sizeIn(maxWidth = Dimens.ToolbarIconSize, maxHeight = Dimens.ToolbarIconSize)
-            .drawBackground(color = MaterialTheme.colors.surface, shape = CircleShape)
+            .background(color = MaterialTheme.colors.surface, shape = CircleShape)
 
         IconButton(
             onClick = onBackClick,
-            modifier = Modifier.padding(start = Dimens.ToolbarIconPadding).plus(iconModifier)
+            modifier = Modifier.padding(start = Dimens.ToolbarIconPadding).then(iconModifier)
         ) {
             Icon(Icons.Filled.ArrowBack)
         }
@@ -353,7 +353,7 @@ private fun PlantHeaderActions(
             onClick = onShareClick,
             modifier = Modifier
                 .padding(end = Dimens.ToolbarIconPadding)
-                .plus(iconModifier)
+                .then(iconModifier)
                 .semantics {
                     accessibilityLabel = shareAccessibilityLabel
                 }
@@ -411,10 +411,13 @@ private fun PlantInformation(
 
 @Composable
 private fun PlantDescription(description: String) {
-    // Issue: User input doesn't work properly, HTML links cannot be clicked - b/158088138
-    // HTML support coming to Compose - b/139320905
-    AndroidView(resId = R.layout.item_plant_description) {
-        (it as TextView).text = HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_COMPACT)
+    AndroidViewBinding(ItemPlantDescriptionBinding::inflate) {
+        plantDescription.text = HtmlCompat.fromHtml(
+            description,
+            HtmlCompat.FROM_HTML_MODE_COMPACT
+        )
+        plantDescription.movementMethod = LinkMovementMethod.getInstance()
+        plantDescription.linksClickable = true
     }
 }
 
@@ -425,15 +428,15 @@ private fun PlantDescription(description: String) {
  * there's a frame delay.
  */
 @Composable
-private fun getFabOffset(imageHeight: Int, scrollerPosition: ScrollerPosition): Dp {
+private fun getFabOffset(imageHeight: Int, scrollState: ScrollState): Dp {
     return with(DensityAmbient.current) {
-        imageHeight.toDp() + scrollerParallaxOffset(this, scrollerPosition) - (56 / 2).dp
+        imageHeight.toDp() + scrollerParallaxOffset(this, scrollState) - (56 / 2).dp
     }
 }
 
 @Preview
 @Composable
-private fun PlantOverviewPreview() {
+private fun PlantDetailContentPreview() {
     MaterialThemeFromMdcTheme(ContextAmbient.current) {
         Surface {
             PlantDetails(

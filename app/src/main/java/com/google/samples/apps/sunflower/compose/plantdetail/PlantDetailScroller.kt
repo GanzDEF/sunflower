@@ -16,14 +16,15 @@
 
 package com.google.samples.apps.sunflower.compose.plantdetail
 
-import androidx.animation.FloatPropKey
-import androidx.animation.Spring
-import androidx.animation.transitionDefinition
-import androidx.compose.Composable
-import androidx.ui.foundation.ScrollerPosition
-import androidx.ui.unit.Density
-import androidx.ui.unit.Dp
-import androidx.ui.unit.dp
+import androidx.compose.animation.core.FloatPropKey
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.transitionDefinition
+import androidx.compose.foundation.ScrollState
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 private val HeaderTransitionOffset = 32.dp
 private const val ParallaxFactor = 2f
@@ -32,12 +33,12 @@ private const val ParallaxFactor = 2f
  * Class that contains derived state for when the toolbar should be shown
  */
 data class PlantDetailsScroller(
-    val scrollerPosition: ScrollerPosition,
+    val scrollState: ScrollState,
     val namePosition: Float
 ) {
     fun getToolbarState(density: Density): ToolbarState {
         return if (namePosition != 0f &&
-            scrollerPosition.value > (namePosition + getTransitionOffset(density))
+            scrollState.value > (namePosition + getTransitionOffset(density))
         ) {
             ToolbarState.SHOWN
         } else {
@@ -56,7 +57,7 @@ enum class ToolbarState { HIDDEN, SHOWN }
 val toolbarAlphaKey = FloatPropKey()
 val contentAlphaKey = FloatPropKey()
 
-val toolbarTransitionDefinition = transitionDefinition {
+val toolbarTransitionDefinition = transitionDefinition<ToolbarState> {
     state(ToolbarState.HIDDEN) {
         this[toolbarAlphaKey] = 0f
         this[contentAlphaKey] = 1f
@@ -66,17 +67,17 @@ val toolbarTransitionDefinition = transitionDefinition {
         this[contentAlphaKey] = 0f
     }
     transition {
-        toolbarAlphaKey using physics<Float> {
+        toolbarAlphaKey using spring<Float>(
             stiffness = Spring.StiffnessLow
-        }
-        contentAlphaKey using physics<Float> {
+        )
+        contentAlphaKey using spring<Float>(
             stiffness = Spring.StiffnessLow
-        }
+        )
     }
 }
 
 @Composable
-fun scrollerParallaxOffset(density: Density, scrollerPosition: ScrollerPosition): Dp =
+fun scrollerParallaxOffset(density: Density, scrollState: ScrollState): Dp =
     with(density) {
-        (scrollerPosition.value / ParallaxFactor).toDp()
+        (scrollState.value / ParallaxFactor).toDp()
     }

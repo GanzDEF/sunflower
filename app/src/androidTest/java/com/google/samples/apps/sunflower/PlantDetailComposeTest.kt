@@ -19,14 +19,15 @@ package com.google.samples.apps.sunflower
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.annotation.RawRes
-import androidx.compose.Composable
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.ContextAmbient
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.ui.core.ContextAmbient
 import androidx.ui.test.assertIsDisplayed
 import androidx.ui.test.createComposeRule
-import androidx.ui.test.findByLabel
-import androidx.ui.test.findByText
+import androidx.ui.test.onNodeWithLabel
+import androidx.ui.test.onNodeWithText
+import com.google.samples.apps.sunflower.compose.ProvideDisplayInsets
 import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetails
 import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetailsCallbacks
 import com.google.samples.apps.sunflower.data.Plant
@@ -39,34 +40,32 @@ import org.junit.runner.RunWith
 class PlantDetailComposeTest {
 
     @get:Rule
-    val composeTestRule = createComposeRule()
+    val composeTestRule = createComposeRule(disableTransitions = true)
 
     @Test
     fun plantDetails_checkIsNotPlanted() {
-        composeTestRule.setContent {
-            PlantDetails(
-                plant = plantForTesting(),
-                isPlanted = false,
-                callbacks = PlantDetailsCallbacks({ }, { }, { })
-            )
-        }
-
-        findByText("Apple").assertIsDisplayed()
-        findByLabel("Add plant").assertIsDisplayed()
+        startPlantDetails(isPlanted = false)
+        onNodeWithText("Apple").assertIsDisplayed()
+        onNodeWithLabel("Add plant").assertIsDisplayed()
     }
 
     @Test
     fun plantDetails_checkIsPlanted() {
-        composeTestRule.setContent {
-            PlantDetails(
-                plant = plantForTesting(),
-                isPlanted = true,
-                callbacks = PlantDetailsCallbacks({ }, { }, { })
-            )
-        }
+        startPlantDetails(isPlanted = true)
+        onNodeWithText("Apple").assertIsDisplayed()
+        onNodeWithLabel("Add plant").assertDoesNotExist()
+    }
 
-        findByText("Apple").assertIsDisplayed()
-        findByLabel("Add plant").assertDoesNotExist()
+    private fun startPlantDetails(isPlanted: Boolean) {
+        composeTestRule.setContent {
+            ProvideDisplayInsets {
+                PlantDetails(
+                    plant = plantForTesting(),
+                    isPlanted = isPlanted,
+                    callbacks = PlantDetailsCallbacks({ }, { }, { })
+                )
+            }
+        }
     }
 }
 

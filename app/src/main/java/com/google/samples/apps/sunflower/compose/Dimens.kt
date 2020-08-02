@@ -16,10 +16,10 @@
 
 package com.google.samples.apps.sunflower.compose
 
-import androidx.compose.Composable
-import androidx.ui.res.dimensionResource
-import androidx.ui.unit.Dp
-import androidx.ui.unit.dp
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.google.samples.apps.sunflower.R
 
 /**

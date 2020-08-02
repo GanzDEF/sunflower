@@ -50,8 +50,15 @@ android {
         dataBinding true
     }
     composeOptions {
-        kotlinCompilerVersion composeKotlinCompilerVersion
+        kotlinCompilerVersion rootProject.kotlinVersion
         kotlinCompilerExtensionVersion rootProject.composeVersion
+    }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs += ["-Xallow-jvm-ir-dependencies", "-Xskip-prerelease-check"]
     }
 }
 
@@ -80,13 +87,14 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.coroutinesVersion"
 
     // Compose
-    implementation "androidx.compose:compose-runtime:$rootProject.composeVersion"
-    implementation "androidx.ui:ui-core:$rootProject.composeVersion"
-    implementation "androidx.ui:ui-foundation:$rootProject.composeVersion"
-    implementation "androidx.ui:ui-layout:$rootProject.composeVersion"
-    implementation "androidx.ui:ui-material:$rootProject.composeVersion"
+    implementation "androidx.compose.runtime:runtime:$rootProject.composeVersion"
+    implementation "androidx.compose.ui:ui:$rootProject.composeVersion"
+    implementation "androidx.compose.foundation:foundation:$rootProject.composeVersion"
+    implementation "androidx.compose.foundation:foundation-layout:$rootProject.composeVersion"
+    implementation "androidx.compose.material:material:$rootProject.composeVersion"
+    implementation "androidx.compose.ui:ui-viewbinding:$rootProject.composeVersion"
     implementation "androidx.ui:ui-tooling:$rootProject.composeVersion"
-    implementation "androidx.ui:ui-livedata:$rootProject.composeVersion"
+    implementation "androidx.compose.runtime:runtime-livedata:$rootProject.composeVersion"
     implementation "dev.chrisbanes.accompanist:accompanist-mdc-theme:$rootProject.accompanistVersion"
     implementation "dev.chrisbanes.accompanist:accompanist-coil:$rootProject.accompanistVersion"
 

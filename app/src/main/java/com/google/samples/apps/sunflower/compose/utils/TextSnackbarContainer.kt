@@ -16,19 +16,18 @@
 
 package com.google.samples.apps.sunflower.compose.utils
 
-import androidx.compose.Composable
-import androidx.compose.launchInComposition
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.shape.corner.RoundedCornerShape
-import androidx.ui.layout.Stack
-import androidx.ui.layout.padding
-import androidx.ui.material.Snackbar
-import androidx.ui.unit.dp
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.layout.Stack
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Snackbar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.launchInComposition
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.google.samples.apps.sunflower.compose.systemBarsPadding
 import kotlinx.coroutines.delay
-
 
 /**
  * Simple API to display a Snackbar with text on the screen
@@ -53,7 +52,7 @@ fun TextSnackbarContainer(
             Snackbar(
                 modifier = Modifier
                     .gravity(Alignment.BottomCenter)
-                    .systemBarsPadding(bottom = true)
+                    .systemBarsPadding()
                     .padding(all = 8.dp),
                 text = { Text(snackbarText) },
                 shape = RoundedCornerShape(4.dp)

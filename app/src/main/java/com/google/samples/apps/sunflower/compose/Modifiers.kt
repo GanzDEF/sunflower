@@ -16,12 +16,11 @@
 
 package com.google.samples.apps.sunflower.compose
 
-import androidx.ui.core.Constraints
-import androidx.ui.core.LayoutDirection
-import androidx.ui.core.LayoutModifier
-import androidx.ui.core.Measurable
-import androidx.ui.core.MeasureScope
-import androidx.ui.core.Modifier
+import androidx.compose.ui.LayoutModifier
+import androidx.compose.ui.Measurable
+import androidx.compose.ui.MeasureScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Constraints
 
 /**
  * Hides an element on the screen leaving its space occupied.
@@ -31,15 +30,14 @@ import androidx.ui.core.Modifier
  * isVisible is of type () -> Boolean because if the calling composable doesn't own the
  * state boolean of that Boolean, a read (recompose) will be avoided.
  */
-fun Modifier.visible(isVisible: () -> Boolean) = this + VisibleModifier(isVisible)
+fun Modifier.visible(isVisible: () -> Boolean) = this.then(VisibleModifier(isVisible))
 
 private data class VisibleModifier(
     private val isVisible: () -> Boolean
 ) : LayoutModifier {
     override fun MeasureScope.measure(
         measurable: Measurable,
-        constraints: Constraints,
-        layoutDirection: LayoutDirection
+        constraints: Constraints
     ): MeasureScope.MeasureResult {
         val placeable = measurable.measure(constraints)
         return layout(placeable.width, placeable.height) {
