@@ -21,7 +21,7 @@ buildscript {
         compileSdkVersion = 28
         minSdkVersion = 21
         targetSdkVersion = 28
-        composeSnapshot = '6721902' // dev16
+        composeSnapshot = '6759487'
 
         // App dependencies
         accompanistVersion = "0.1.8.ui-$composeSnapshot-SNAPSHOT"
