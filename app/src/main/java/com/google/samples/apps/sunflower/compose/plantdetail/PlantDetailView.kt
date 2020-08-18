@@ -53,9 +53,9 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.state
-import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawOpacity
@@ -149,8 +149,8 @@ fun PlantDetails(
 ) {
     // PlantDetails owns the scrollerPosition to simulate CollapsingToolbarLayout's behavior
     val scrollState = rememberScrollState()
-    var plantScroller by state {
-        PlantDetailsScroller(scrollState, Float.MIN_VALUE)
+    var plantScroller by remember {
+        mutableStateOf(PlantDetailsScroller(scrollState, Float.MIN_VALUE))
     }
     val toolbarState = plantScroller.getToolbarState(DensityAmbient.current)
 
@@ -269,7 +269,7 @@ private fun PlantImageHeader(
     isPlanted: Boolean,
     transitionModifier: Modifier = Modifier
 ) {
-    var imageHeight by state(structuralEqualityPolicy()) { 0 }
+    var imageHeight by remember { mutableStateOf(0) }
 
     Stack(Modifier.fillMaxWidth()) {
         PlantImage(

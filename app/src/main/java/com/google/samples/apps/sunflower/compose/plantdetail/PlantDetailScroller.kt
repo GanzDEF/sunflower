@@ -67,10 +67,10 @@ val toolbarTransitionDefinition = transitionDefinition<ToolbarState> {
         this[contentAlphaKey] = 0f
     }
     transition {
-        toolbarAlphaKey using spring<Float>(
+        toolbarAlphaKey using spring(
             stiffness = Spring.StiffnessLow
         )
-        contentAlphaKey using spring<Float>(
+        contentAlphaKey using spring(
             stiffness = Spring.StiffnessLow
         )
     }
