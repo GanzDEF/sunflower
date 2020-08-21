@@ -54,6 +54,9 @@ data class PlantDetailsScroller(
 // Toolbar state related classes and functions to achieve the CollapsingToolbarLayout animation
 enum class ToolbarState { HIDDEN, SHOWN }
 
+val ToolbarState.isShown
+    get() = this == ToolbarState.SHOWN
+
 val toolbarAlphaKey = FloatPropKey()
 val contentAlphaKey = FloatPropKey()
 

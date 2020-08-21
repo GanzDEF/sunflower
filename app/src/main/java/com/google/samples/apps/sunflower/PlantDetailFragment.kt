@@ -19,16 +19,15 @@ package com.google.samples.apps.sunflower
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.samples.apps.sunflower.compose.ProvideDisplayInsets
 import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetailsScreen
-import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
 /**
  * A fragment representing a single Plant detail screen.
@@ -43,19 +42,15 @@ class PlantDetailFragment : Fragment() {
         savedInstanceState: Bundle?
     ) = ComposeView(requireContext()).apply {
 
-        // Displaying edge-to-edge
-        systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-
         setContent {
             // Create a Compose MaterialTheme inheriting the existing colors, typography
             // and shapes of the current View system's theme
-            MaterialThemeFromMdcTheme {
+            MdcTheme {
                 ProvideDisplayInsets {
                     PlantDetailsScreen(
                         args.plantId,
                         onBackClick = {
-                            this.findNavController().navigateUp()
+                            findNavController().navigateUp()
                         },
                         onShareClick = { textToShare ->
                             createShareIntent(textToShare)

@@ -76,6 +76,7 @@ import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.compose.ui.viewinterop.viewModel
 import androidx.core.text.HtmlCompat
 import androidx.ui.tooling.preview.Preview
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.compose.Dimens
 import com.google.samples.apps.sunflower.compose.systemBarsPadding
@@ -87,7 +88,6 @@ import com.google.samples.apps.sunflower.databinding.ItemPlantDescriptionBinding
 import com.google.samples.apps.sunflower.utilities.InjectorUtils
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
 import dev.chrisbanes.accompanist.coil.CoilImageWithCrossfade
-import dev.chrisbanes.accompanist.mdctheme.MaterialThemeFromMdcTheme
 
 /**
  * As these callbacks are passed in through multiple Composables, to avoid having to name
@@ -437,7 +437,7 @@ private fun getFabOffset(imageHeight: Int, scrollState: ScrollState): Dp {
 @Preview
 @Composable
 private fun PlantDetailContentPreview() {
-    MaterialThemeFromMdcTheme(ContextAmbient.current) {
+    MdcTheme {
         Surface {
             PlantDetails(
                 Plant("plantId", "Tomato", "HTML<br>description", 6),
